@@ -230,7 +230,7 @@ class MurcsRest:
         headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
         r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
-            msg = "Link between server {sid} and solution {softId} removed".format(sid=serverId, softId=softId)
+            msg = "Link between server {sid} and software {softId} removed".format(sid=serverId, softId=softId)
             logging.info(msg)
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))

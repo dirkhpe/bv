@@ -52,14 +52,14 @@ if __name__ == "__main__":
     if not soft_rec:
         sys.exit("Software {sw} not found.".format(sw=softId))
     serverId = server_rec["serverId"]
+    solName = sol_rec["solName"]
 
-    # Handle solution Instance for the solution
-    if not mdb.get_solInst(solId):
-        r.add_solutionInstance(sol_rec)
-        mdb.recycle()
+    # Get solution Instance for the solution
     solInst_rec = mdb.get_solInst(solId)
+    if not solInst_rec:
+        sys.exit("No Solution Instance for solution {s}".format(s=solName))
 
-    # Link Software to Server for the Solution
+    # Get Software to Server for the Solution
     server_id = server_rec["id"]
     soft_id = soft_rec["id"]
     softInstId = "{db}_{serverId}_{solId}".format(db=dbName, serverId=serverId, solId=solId)
@@ -70,15 +70,13 @@ if __name__ == "__main__":
     else:
         softInstId = "schema_" + softInstId
 
-    if not mdb.get_softInst(soft_id, server_id, softInstId):
-        r.add_software_instance(soft_rec, server_rec, softInstId, instSubType)
-        mdb.recycle()
     softInst_rec = mdb.get_softInst(soft_id, server_id, softInstId)
-
-    # Create Solution Instance Component by linking softInst to SolInst
-    softInst_id = softInst_rec["id"]
-    solInst_id = solInst_rec["id"]
-    if not mdb.get_solInstComp(solInst_id, softInst_id):
-        r.add_solInstComp(solInst_rec, softInst_rec, solId, serverId, softId)
+    if softInst_rec:
+        softInstId = softInst_rec["instId"]
+        r.remove_softInst(serverId, softId, softInstId)
+        logging.info("Link between solution {s} and server {h} over database {d} removed."
+                     .format(s=solName, h=hostName, d=dbName))
+    else:
+        sys.exit("No Software to Server Link for solution {s} and server {h}".format(s=solName, h=hostName))
 
     mdb.close()
