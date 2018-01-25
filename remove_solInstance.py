@@ -1,5 +1,5 @@
 """
-This script will remove a solutionInstance from a solution
+This script will remove a solutionInstance from a solution in MURCS
 """
 import argparse
 import logging

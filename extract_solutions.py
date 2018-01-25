@@ -3,14 +3,18 @@ This script will analyze the solution to solution information for loading in Neo
 """
 
 import logging
+import pymsgbox as msg
 from lib import my_env
 from lib import localstore
 from lib.localstore import *
 from openpyxl import load_workbook
-import sqlalchemy
+# import sqlalchemy
 from sqlalchemy.exc import OperationalError
 
 
+msg_title = "Warning!"
+msg_text = "Convert MURCS xls to xlsx. Do not use MURCS generated xlsx."
+msg.alert(title=msg_title, text=msg_text, button="OK")
 cfg = my_env.init_env("bellavista", __file__)
 logging.info("Start Application")
 db = cfg['Main']['db']

@@ -3,7 +3,7 @@ This script will analyze the file running_software from universal discovery.
 """
 
 import csv
-import logging
+# import logging
 from lib import my_env
 from lib import localstore
 from lib.localstore import *

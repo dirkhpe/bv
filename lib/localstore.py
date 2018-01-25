@@ -2,10 +2,11 @@
 This module consolidates database access for BellaVista project.
 """
 
-# import logging
+import logging
 import os
+import pymysql
 import sqlite3
-from sqlalchemy import Column, Integer, Text, create_engine, ForeignKey, UniqueConstraint
+from sqlalchemy import Column, Integer, Text, create_engine, ForeignKey, UniqueConstraint, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -52,7 +53,7 @@ class Server(Base):
     """
     __tablename__ = "server"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(Text, nullable=False, unique=True)
+    name = Column(VARCHAR(255), nullable=False, unique=True)
     os = Column(Text, nullable=True)
     instances = relationship("Instance")
     # comm_from = relationship("ServerToServer", back_populates="from_server")
@@ -64,7 +65,7 @@ class Solution(Base):
     Table containing solution information.
     """
     __tablename__ = "solution"
-    solId = Column(Text, primary_key=True)
+    solId = Column(VARCHAR(255), primary_key=True)
     name = Column(Text, nullable=False)
     comment = Column(Text)
     complexity = Column(Text)
@@ -86,10 +87,10 @@ class SolutionToSolution(Base):
     """
     __tablename__ = "solutionToSolution"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    fromSolId = Column(Text, ForeignKey("solution.solId"), nullable=False)
+    fromSolId = Column(VARCHAR(255), ForeignKey("solution.solId"), nullable=False)
     fromSol = relationship("Solution", foreign_keys=[fromSolId])
     fromSolName = Column(Text, nullable=False)
-    toSolId = Column(Text, ForeignKey("solution.solId"), nullable=False, )
+    toSolId = Column(VARCHAR(255), ForeignKey("solution.solId"), nullable=False, )
     toSol = relationship("Solution", foreign_keys=[toSolId])
     toSolName = Column(Text, nullable=False)
     conType = Column(Text)
@@ -139,10 +140,10 @@ class ServerToServer(Base):
     port = Column(Integer)
 
 
-class DbUtils:
+class sqliteUtils:
     """
-    This class consolidates a number of Database utilities, such as rebuild of the database or rebuild of a specific
-    table.
+    This class consolidates a number of Database utilities for sqlite, such as rebuild of the database or rebuild of a
+    specific table.
     """
 
     def __init__(self, config):
@@ -151,7 +152,6 @@ class DbUtils:
         """
         self.db = config['Main']['db']
         self.dbConn, self.cur = self._connect2db()
-
 
     def _connect2db(self):
         """
@@ -182,48 +182,47 @@ class DbUtils:
         Base.metadata.create_all(engine)
 
 
-
-
-class DirectConn:
+class mysqlUtils:
     """
-    This class will set up a direct connection to the database. It allows to reset the database,
-    in which case the database will be dropped and recreated, including all tables.
+    This class consolidates a number of Database utilities for mySql, such as rebuild of the database or rebuild of a
+    specific table.
     """
-    # Todo: Drop this class and use DbUtils instead.
 
     def __init__(self, config):
         """
-        To drop a database in sqlite3, you need to delete the file.
-        """
-        self.conn_string = "sqlite:///{db}".format(db=self.db)
-        self.db = config['Main']['db']
-        self.dbConn = ""
-        self.cur = ""
+        The init procedure will set-up Connection to the Database Server.
 
-    def _connect2db(self):
+        :param config: Link to the configuration object.
         """
-        Internal method to create a database connection and a cursor. This method is called during object
-        initialization.
-        Note that sqlite connection object does not test the Database connection. If database does not exist, this
-        method will not fail. This is expected behaviour, since it will be called to create databases as well.
-
-        :return: Database handle and cursor for the database.
-        """
-        # logging.debug("Creating Datastore object and cursor")
-        db_conn = sqlite3.connect(self.db)
-        # db_conn.row_factory = sqlite3.Row
-        # logging.debug("Datastore object and cursor are created")
-        return db_conn, db_conn.cursor()
+        self.msp = dict(
+            host=config['MySQL']['host'],
+            port=int(config['MySQL']['port']),
+            user=config['MySQL']['user'],
+            passwd=config['MySQL']['passwd'],
+            db=config['MySQL']['db']
+        )
+        self.conn = pymysql.connect(**self.msp)
+        self.cur = self.conn.cursor(pymysql.cursors.DictCursor)
 
     def rebuild(self):
-        # A drop for sqlite is a remove of the file
-        try:
-            os.remove(self.db)
-        except FileNotFoundError:
-            pass
-        # Reconnect to the Database
-        self.engine = set_engine(conn_string=self.conn_string)
-        Base.metadata.create_all(self.engine)
+        """
+        This function will drop and recreate the database. Then it will call SQLAlchemy to recreate the tables.
+        :return:
+        """
+        db = self.msp["db"]
+        user = self.msp["user"]
+        passwd = self.msp["passwd"]
+        host = self.msp["host"]
+        query = "DROP DATABASE IF EXISTS {db}".format(db=db)
+        logging.info(query)
+        self.cur.execute(query)
+        query = "CREATE DATABASE {db}".format(db=db)
+        logging.info(query)
+        self.cur.execute(query)
+        # Now use sqlalchemy connection to build database
+        conn_string = "mysql+pymysql://{u}:{p}@{h}/{db}".format(db=db, u=user, p=passwd, h=host)
+        engine = set_engine(conn_string)
+        Base.metadata.create_all(engine)
 
 
 def init_session(db, echo=False):

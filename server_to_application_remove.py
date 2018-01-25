@@ -1,5 +1,5 @@
 """
-This script will remove a connection from a server to an application.
+This script will remove a connection from a server to an application in MURCS.
 """
 import argparse
 import logging

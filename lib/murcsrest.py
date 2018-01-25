@@ -54,6 +54,26 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def get_wave(self):
+        """
+        This method launches the Rest call to get wave information
+
+        :return:
+        """
+        url = self.url_base + 'solutions/{solId}'.format(solId=solId)
+        headers = {
+            'Accept': 'application/json'
+        }
+        r = requests.get(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            parsed_json = r.json()
+            print(parsed_json['fromSolution'][0]['comment'])
+        else:
+            print("Investigate: {s}".format(s=r.status_code))
+            print(r.content)
+            r.raise_for_status()
+        return
+
     def add_software_from_sol(self, sol_rec):
         """
         This method will create a Software from a Solution.

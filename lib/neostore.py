@@ -4,7 +4,7 @@ This class consolidates functions related to the neo4J datastore.
 
 import logging
 import sys
-from py2neo import Graph, Node, Relationship
+from py2neo import Graph, Node, Relationship, NodeSelector
 from py2neo.ext.calendar import GregorianCalendar
 from py2neo.database import DBMS
 
@@ -14,8 +14,11 @@ class NeoStore:
     def __init__(self, config, refresh='No'):
         """
         Method to instantiate the class in an object for the neostore module.
+
         :param config object, to get connection parameters.
+
         :param refresh: If Yes, then database will be made empty.
+
         :return: Object to handle neostore commands.
         """
         logging.debug("Initializing Neostore object")
@@ -24,11 +27,13 @@ class NeoStore:
         if refresh == 'Yes':
             self._delete_all()
         self.calendar = GregorianCalendar(self.graph)
+        self.selector = NodeSelector(self.graph)
         return
 
     def _connect2db(self):
         """
         Internal method to create a database connection. This method is called during object initialization.
+
         :return: Database handle and cursor for the database.
         """
         logging.debug("Creating Neostore object.")
@@ -54,21 +59,26 @@ class NeoStore:
 
         :param props: Value dictionary with values for the node.
 
-        :return:
+        :return: node object
         """
+        logging.debug("Trying to create node with params {p}".format(p=props))
         component = Node(*labels, **props)
         self.graph.create(component)
         return component
 
-    def create_relation(self, left_node, rel, right_node):
+    def create_relation(self, from_node, rel, to_node):
         """
-        Function to create relationship between nodes.
-        @param left_node:
-        @param rel:
-        @param right_node:
-        @return:
+        Function to create relationship between nodes. If the relation exists already, it will not be created again.
+
+        :param from_node:
+
+        :param rel:
+
+        :param to_node:
+
+        :return:
         """
-        rel = Relationship(left_node, rel, right_node)
+        rel = Relationship(from_node, rel, to_node)
         self.graph.merge(rel)
         return
 
@@ -76,20 +86,45 @@ class NeoStore:
         """
         Function to remove all nodes and relations from the graph database.
         Then create calendar object.
+
         :return:
         """
         logging.info("Remove all nodes and relations from database.")
         self.graph.delete_all()
         return
 
+    def get_nodes(self, *labels, **props):
+        """
+        This method will select all nodes that have labels and properties
+
+        :param labels:
+
+        :param props:
+
+        :return: list of nodes that fulfill the criteria, or False if no nodes are found.
+        """
+        nodes = self.selector.select(*labels, **props)
+        nodelist = list(nodes)
+        if len(nodelist) == 0:
+            # No nodes found that fulfil the criteria
+            return False
+        else:
+            return nodelist
+
     def link2date(self, component, rel, y, m, d):
         """
         This function will link the component to a date
+
         :param component: Node of the component to link to
+
         :param rel: Type of relation to link to
+
         :param y: Year, in int
+
         :param m: Month, in int
+
         :param d: Day, in int
+
         :return:
         """
         date_node = self.calendar.date(y, m, d).day
