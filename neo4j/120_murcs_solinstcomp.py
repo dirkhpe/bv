@@ -11,7 +11,7 @@ solcomplbl = "SolComp"
 solInstComplbl = "SolInstComp"
 # Relations
 solinstcomp2comp = "toComponent"
-solinstcomp2inst = "toInstance"
+inst2solinstcomp = "toInstComp"
 
 ignore = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "clientid", "solInstId_nr", "softInstId_nr",
           "serverId", "softId", "solId"]
@@ -45,7 +45,7 @@ for row in df.iterrows():
             if pandas.notnull(xl[k]):
                 node_params[k] = xl[k]
     solinstcomp_node = ns.create_node(solInstComplbl, **node_params)
-    ns.create_relation(from_node=solinstcomp_node, rel=solinstcomp2inst, to_node=inst_node)
+    ns.create_relation(from_node=inst_node, rel=inst2solinstcomp, to_node=solinstcomp_node)
     ns.create_relation(from_node=solinstcomp_node, rel=solinstcomp2comp, to_node=solcomp_node)
     my_loop.info_loop()
 my_loop.end_loop()

@@ -4,6 +4,7 @@ This class consolidates functions related to the neo4J datastore.
 
 import logging
 import sys
+from pandas import DataFrame
 from py2neo import Graph, Node, Relationship, NodeSelector
 from py2neo.ext.calendar import GregorianCalendar
 from py2neo.database import DBMS
@@ -130,3 +131,24 @@ class NeoStore:
         date_node = self.calendar.date(y, m, d).day
         self.create_relation(component, rel, date_node)
         return
+
+    def get_query(self, query):
+        """
+        This function will run a query and return the result as a cursor.
+
+        :param query:
+
+        :return: cursor containing the query result
+        """
+        return self.graph.run(query)
+
+    def get_query_as_df(self, query):
+        """
+        This function will run a query and return the result as a datafram.
+
+        :param query:
+
+        :return: Dataframe as result
+        """
+        return DataFrame(self.graph.data(query))
+
