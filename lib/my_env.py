@@ -10,7 +10,7 @@ import logging.handlers
 import os
 import platform
 import sys
-# import subprocess
+import subprocess
 from collections import namedtuple
 from datetime import datetime
 
@@ -67,6 +67,7 @@ def init_loghandler(config, modulename):
     # Define logfileName
     logfile = logdir + "/" + modulename + "_" + computername + ".log"
     # Configure the root logger
+    logging.getLogger('neo4j.bolt').setLevel(logging.WARNING)
     logger = logging.getLogger()
     level = logging.getLevelName(loglevel)
     logger.setLevel(level)
@@ -90,7 +91,6 @@ def init_loghandler(config, modulename):
     ch.setFormatter(formatter_console)
     logger.addHandler(ch)
     # Set Neo4J Logging to Warning only (in case Neo4J is used.
-    logging.getLogger('neo4j.bolt').setLevel(logging.WARNING)
     return logger
 
 
@@ -99,9 +99,9 @@ def get_inifile(projectname):
     Read Project configuration ini file in subdirectory properties. Config ini filename is the projectname.
     The ini file is located in the properties module, which is sibling of the lib module.
 
-    @param projectname: Name of the project.
+    :param projectname: Name of the project.
 
-    @return: Object reference to the inifile.
+    :return: Object reference to the inifile.
     """
     # Use Project Name as ini file.
     # TODO: review procedure to get directory name instead of relative properties/ path.
@@ -144,6 +144,24 @@ def get_named_row(nr_name, col_hrd):
     # Create named tuple subclass with name "named_row"
     named_row = namedtuple(nr_name, field_list, rename=True)
     return named_row
+
+
+def run_script(path, script_name, *args):
+    """
+    This function will run a python script with arguments.
+
+    :param path: Full path to the script.
+
+    :param script_name: Name of the script. Include .py if this is the script extension.
+
+    :param args: List of script arguments.
+
+    :return:
+    """
+    script_path = os.path.join(path, script_name)
+    cmd = [sys.executable, script_path] + list(args)
+    subprocess.call(cmd, env=os.environ.copy())
+    return
 
 
 class LoopInfo:

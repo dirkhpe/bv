@@ -111,5 +111,12 @@
     "border-color": "#E0849B",
     "text-color-internal": "#FFFFFF",
     "diameter": "50px"
+  },
+  "node.SapSid": {
+    "defaultCaption": "<id>",
+    "color": "#FB95AF",
+    "border-color": "#E0849B",
+    "text-color-internal": "#FFFFFF",
+    "caption": "{name}"
   }
 }

@@ -159,6 +159,8 @@ class Murcs:
     def get_solInst(self, solId):
         """
         This method will return the solInstId linked with the solution solId.
+        Note that it is possible to have more than one solInstId related to a solId. Use function get_solComp to
+        approach a solComp directly.
 
         :param solId: Solution for which solInstId is required.
 
@@ -167,6 +169,28 @@ class Murcs:
         sol_id = self.get_sol(solId)["id"]
         query = "SELECT * FROM solinst WHERE solId=%(solId)s"
         self.cur.execute(query, {"solId": sol_id})
+        res = self.cur.fetchall()
+        if len(res) > 0:
+            return res[0]
+        else:
+            return False
+
+    def get_solComp(self, solInstId):
+        """
+        This method will return the solComp record linked with the solInstId.
+
+        :param solInstId: solInstId for which record is required.
+
+        :return: solInstId, or False if not found.
+        """
+        query = """
+            SELECT s.solId as solId, i.solInstId as solInstId, i.solInstName as solInstName,
+                   i.solInstType as solInstType
+            FROM solinst i
+            INNER JOIN sol s on s.id=i.solId
+            WHERE solInstId=%(solInstId)s
+        """
+        self.cur.execute(query, {"solInstId": solInstId})
         res = self.cur.fetchall()
         if len(res) > 0:
             return res[0]

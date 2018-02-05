@@ -14,7 +14,7 @@ sitelbl = "Site"
 iplbl = "IP"
 # Relations
 server2ip = "hasIP"
-server2parent = "hasParent"
+parent2server = "hasVirtual"
 site2server = "hasDev"
 
 ign_srv = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "category", "classification",
@@ -57,7 +57,7 @@ my_loop.end_loop()
 my_loop = my_env.LoopInfo("Link to Parent", 20)
 for k in parentServer_d:
     # There needs to be a node for parent and child at this time
-    ns.create_relation(from_node=srv_node_d[k], rel=server2parent, to_node=srv_node_d[parentServer_d[k]])
+    ns.create_relation(from_node=srv_node_d[parentServer_d[k]], rel=parent2server, to_node=srv_node_d[k])
     my_loop.info_loop()
 my_loop.end_loop()
 
