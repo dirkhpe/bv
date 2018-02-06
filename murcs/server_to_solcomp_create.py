@@ -17,15 +17,18 @@ if __name__ == "__main__":
     )
     parser.add_argument('-s', '--hostName', type=str, required=True,
                         help='Please provide hostName to identify the server.')
-    parser.add_argument('-a', '--solInstId', type=str, required=True,
-                        help='Please provide solInstId to identify the application.')
+    parser.add_argument('-a', '--solId', type=str, required=True,
+                        help='Please provide solId to identify the application.')
+    parser.add_argument('-e', '--env', type=str, required=True,
+                        choices=['Production', 'Development', 'Quality', 'Compression'],
+                        help='Please provide environment (Production, Quality, Development, Compression)')
     args = parser.parse_args()
     cfg = my_env.init_env("bellavista", __file__)
     mdb = murcsstore.Murcs(cfg)
     r = murcsrest.MurcsRest(cfg)
     logging.info("Arguments: {a}".format(a=args))
 
-    solInstId = args.solInstId
+    solInstId = my_env.get_solInstId(solId=args.solId, env=args.env)
     hostName = args.hostName
     solcomp_rec = mdb.get_solComp(solInstId)
     server_rec = mdb.get_server(hostName)
@@ -34,27 +37,28 @@ if __name__ == "__main__":
     if not server_rec:
         sys.exit("Server {h} not found.".format(h=hostName))
     serverId = server_rec["serverId"]
-
     solId = solcomp_rec["solId"]
+    environment = solcomp_rec["environment"]
+
     # Handle Software for the Solution
     softId = "{solId} software".format(solId=solId)
     if not mdb.get_soft(softId):
-        r.add_software_from_sol(sol_rec)
+        r.add_software_from_sol(solcomp_rec)
         mdb.recycle()
     soft_rec = mdb.get_soft(softId)
 
     # Link Software to Server for the Solution
     server_id = server_rec["id"]
     soft_id = soft_rec["id"]
-    # softInst_rec = mdb.get_softInst(soft_id, server_id)
-    if not mdb.get_softInst(soft_id, server_id):
-        r.add_software_instance(soft_rec, server_rec)
+    softInstId = "{softId} {serverId} {env}".format(softId=softId, serverId=serverId, env=environment)
+    if not mdb.get_softInst(soft_id, server_id, softInstId):
+        r.add_software_instance(soft_rec, server_rec, softInstId, environment)
         mdb.recycle()
-    softInst_rec = mdb.get_softInst(soft_id, server_id)
+    softInst_rec = mdb.get_softInst(soft_id, server_id, softInstId)
 
     # Create Solution Instance Component by linking softInst to SolInst
     softInst_id = softInst_rec["id"]
-    solInst_id = solInst_rec["id"]
+    solInst_id = solcomp_rec["id"]
     if not mdb.get_solInstComp(solInst_id, softInst_id):
-        r.add_solInstComp(solInst_rec, softInst_rec, solInstId, serverId, softId)
+        r.add_solInstComp(solcomp_rec, softInst_rec, solId, serverId, softId)
     mdb.close()

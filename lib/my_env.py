@@ -94,6 +94,27 @@ def init_loghandler(config, modulename):
     return logger
 
 
+def env2abbr(env):
+    """
+    This method will return the environment abbreviation.
+
+    :param env: Production - Development - Quality
+
+    :return: prod - dev - qua
+    """
+    env2abbr_dict = dict(
+        Production="prod",
+        Development="dev",
+        Quality="qua",
+        Compression="comp"
+    )
+    try:
+        return env2abbr_dict[env]
+    except KeyError:
+        logging.error("Unknown environment {env}".format(env=env))
+        return False
+
+
 def get_inifile(projectname):
     """
     Read Project configuration ini file in subdirectory properties. Config ini filename is the projectname.
@@ -144,6 +165,29 @@ def get_named_row(nr_name, col_hrd):
     # Create named tuple subclass with name "named_row"
     named_row = namedtuple(nr_name, field_list, rename=True)
     return named_row
+
+
+def get_solInstId(solId, env):
+    """
+    This method will calculate the solInstId for a solId and environment. Environment needs to be Production,
+    Development or Quality.
+
+    :param solId:
+
+    :param env: Production, Development, Quality or Compression
+
+    :return:
+    """
+    env_abbr = env2abbr(env)
+    if env_abbr:
+        if env == "Production":
+            envstr = ""
+        else:
+            envstr = " {env_abbr}".format(env_abbr=env_abbr)
+        return "{solId} solInstance{env}".format(solId=solId, env=envstr)
+    else:
+        logging.error("Cannot create solInstId, invalid environment: {env}".format(env=env))
+        return False
 
 
 def run_script(path, script_name, *args):

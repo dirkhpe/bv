@@ -112,11 +112,13 @@ class Murcs:
         required to guarantee we are extracting data for the required clientID (and not for previous/next version of
         the client load in Murcs).
 
-        :param soft_id:
+        :param soft_id: id (number) of the soft record
 
-        :param server_id:
+        :param server_id: id (number) of the server record.
 
-        :param softInstId: Optional.
+        :param softInstId: Optional. By default "softId serverId". In case this is softInstance for Application, then
+        environment will be added if it is other than 'Production'. Current environments are Production, Development
+        and Quality.
 
         :return:
         """
@@ -162,7 +164,7 @@ class Murcs:
         Note that it is possible to have more than one solInstId related to a solId. Use function get_solComp to
         approach a solComp directly.
 
-        :param solId: Solution for which solInstId is required.
+        :param solId: Solution for which solInstId is required. Client ID is used while requesting solution record.
 
         :return: solInstId, or False if not found.
         """
@@ -184,13 +186,18 @@ class Murcs:
         :return: solInstId, or False if not found.
         """
         query = """
-            SELECT s.solId as solId, i.solInstId as solInstId, i.solInstName as solInstName,
-                   i.solInstType as solInstType
+            SELECT s.solId as solId, s.solName as solName, i.environment as environment, i.id as id,
+                   i.solInstId as solInstId, i.solInstName as solInstName, i.solInstType as solInstType
             FROM solinst i
             INNER JOIN sol s on s.id=i.solId
             WHERE solInstId=%(solInstId)s
+              AND s.clientId=%(client_id)s
         """
-        self.cur.execute(query, {"solInstId": solInstId})
+        params = dict(
+            solInstId=solInstId,
+            client_id=self.client_id
+        )
+        self.cur.execute(query, params)
         res = self.cur.fetchall()
         if len(res) > 0:
             return res[0]
@@ -201,11 +208,11 @@ class Murcs:
         """
         This method will return the solInstComp record linked with the solution and the server.
 
-        :param solInst_id:
+        :param solInst_id: id (number) of the Solution Component.
 
-        :param softInst_id:
+        :param softInst_id: id (number) of the software instance.
 
-        :return:
+        :return: solInstComp record, or False if not found.
         """
         query = "SELECT * FROM solinstcomponent WHERE softInstId=%(softInst_id)s AND solInstId=%(solInst_id)s"
         self.cur.execute(query, {"softInst_id": softInst_id, "solInst_id": solInst_id})

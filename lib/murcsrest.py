@@ -5,6 +5,7 @@ import logging
 import os
 import requests
 import json
+from lib import my_env
 
 
 class MurcsRest:
@@ -30,7 +31,36 @@ class MurcsRest:
         host = cfg['Murcs']['host']
         port = cfg['Murcs']['port']
         clientId = cfg['Murcs']['clientId']
-        self.url_base = "http://{host}:{port}/murcs/rest/{clientId}/".format(host=host, port=port, clientId=clientId)
+        self.url_base = "http://{host}:{port}/murcs/rest/{clientId}/".format(host=host,
+                                                                             port=port,
+                                                                             clientId=clientId)
+
+    def add_server_property(self, server_rec, payload):
+        """
+        This method will add a property to a server.
+
+        :param server_rec:
+
+        :param payload: Dictionary with propertyName, propertyValue and description
+
+        :return:
+        """
+        serverId = server_rec["serverId"]
+        propname = payload["propertyName"]
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "servers/{serverId}/properties/{prop}".format(serverId=serverId, prop=propname)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Property {prop} with value {val} added to server {serverId}!"
+                         .format(prop=propname, serverId=serverId, val=payload["propertyValue"]))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
 
     def get_sol(self, solId):
         """
@@ -54,9 +84,11 @@ class MurcsRest:
             r.raise_for_status()
         return
 
-    def get_wave(self):
+    def get_wave(self, solId):
         """
         This method launches the Rest call to get wave information
+
+        :param solId: Solution ID for which wave info is required.
 
         :return:
         """
@@ -78,7 +110,7 @@ class MurcsRest:
         """
         This method will create a Software from a Solution.
 
-        :param sol_rec:
+        :param sol_rec: Dictionary with keys solId and solName
 
         :return:
         """
@@ -89,7 +121,7 @@ class MurcsRest:
             softwareName=softName,
             softwareType="Application",
             softwareSubType="Application Implementation",
-            softwareVersion="Production",
+            # softwareVersion="Production",
             inScope="Unknown"
         )
         data = json.dumps(payload)
@@ -108,14 +140,18 @@ class MurcsRest:
     def add_software_instance(self, soft_rec, server_rec, softInstId=False, instSubType=False):
         """
         This method will link a Software from a solution to a server.
+        By default the softInstId is "softId serverId". In case this is softInstance for Application, then
+        environment will be added if it is other than 'Production'. Current environments are Production, Development
+        and Quality. Environment is also in instSubType then.
+        In case this is a database with a known schema, instSubType will have the schema name.
 
         :param soft_rec:
 
         :param server_rec:
 
-        :param softInstId:
+        :param softInstId: Mandatory for Application Type and environment not Production.
 
-        :param instSubType: (Optional) Schema of the instance.
+        :param instSubType: (Optional) Schema of the instance, or environment for Application-type software instances.
 
         :return:
         """
@@ -143,6 +179,35 @@ class MurcsRest:
         r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
             logging.info("software Instance *{softInstId}* is created!".format(softInstId=softwareInstanceId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def add_solComp_property(self, solcomp_rec, payload):
+        """
+        This method will add a property to a solution component.
+
+        :param solcomp_rec:
+
+        :param payload: Dictionary with propertyName, propertyValue and description
+
+        :return:
+        """
+        solId = solcomp_rec["solId"]
+        solInstId = solcomp_rec["solInstId"]
+        propname = payload["propertyName"]
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "solutions/{solId}/solutionInstances/{solInstId}/properties/{prop}"\
+            .format(solId=solId, solInstId=solInstId, prop=propname)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Property {prop} with value {val} added to solComp {solInstId}!"
+                         .format(prop=propname, solInstId=solInstId, val=payload["propertyValue"]))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
@@ -198,16 +263,57 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def add_solutionComponent(self, sol_rec, env):
+        """
+        This method will add a solution Component to a solution. A solution component has an environment identifier.
+        There can be multiple solution components attached to a solution.
+
+        :param sol_rec: Solution Record.
+
+        :param env: Environment (Production, Development, Quality)
+
+        :return:
+        """
+        solId = sol_rec["solId"]
+        solInstId = my_env.get_solInstId(solId, env)
+        solution = dict(solutionId=solId)
+        env_abbr = my_env.env2abbr(env)
+        payload = dict(
+            solutionInstanceId=solInstId,
+            solutionInstanceName="{solName} ({env_abbr})".format(solName=sol_rec["solName"], env_abbr=env_abbr),
+            solutionInstanceType="Application Instance",
+            environment=env,
+            solution=solution,
+            comment='added by Python Script'
+        )
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        url = self.url_base + 'solutions/{solId}/solutionInstances/{solInstId}'\
+            .format(solId=solId, solInstId=solInstId)
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("solution Instance {solInstId} is created for solution {solId}!".format(solId=solId,
+                                                                                                 solInstId=solInstId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def add_solutionInstance(self, sol_rec):
         """
         This method will add a solution Instance to a solution.
+        A solution instance is a special kind of solution Component. A solution instance is used if there is only one
+        required. If more than one objects are required (e.g. Production, Development, Quality, ...) then a Solution
+        Component need to be used.
 
         :param sol_rec: Solution Record.
 
         :return:
         """
         solId = sol_rec["solId"]
-        solInstId = "{solId} solInstanceFromScript".format(solId=solId)
+        solInstId = "{solId} solInstance".format(solId=solId)
         solution = dict(solutionId=solId)
         payload = dict(
             solutionInstanceId=solInstId,
