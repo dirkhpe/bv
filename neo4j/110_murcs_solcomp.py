@@ -10,7 +10,7 @@ solcomplbl = "SolComp"
 # Relations
 solcomp2sol = "fromSolution"
 
-ignore = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "clientid", "environment", "solId_nr"]
+ignore = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "clientid", "solId_nr"]
 
 cfg = my_env.init_env("bellavista", __file__)
 logging.info("Start Application")

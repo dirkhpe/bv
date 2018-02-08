@@ -17,6 +17,7 @@ scripts = ["rebuild_neo4j.py",
            "100_murcs_solutions.py",
            "110_murcs_solcomp.py",
            "120_murcs_solinstcomp.py",
+           "130_murcs_solinst.py",
            "150_waves_to_sol.py"]
 
 cfg = my_env.init_env("bellavista", __file__)

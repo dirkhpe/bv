@@ -35,6 +35,30 @@ class MurcsRest:
                                                                              port=port,
                                                                              clientId=clientId)
 
+    def add_server(self, serverId, payload):
+        """
+        This method will load a server in Murcs.
+
+        :param serverId: serverId to load
+
+        :param payload: Dictionary with properties to load
+
+        :return:
+        """
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "servers/{serverId}".format(serverId=serverId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Load server {serverId}!".format(serverId=serverId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def add_server_property(self, server_rec, payload):
         """
         This method will add a property to a server.
@@ -332,6 +356,26 @@ class MurcsRest:
         if r.status_code == 200:
             logging.info("solution Instance {solInstId} is created for solution {solId}!".format(solId=solId,
                                                                                                  solInstId=solInstId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def remove_server(self, serverId):
+        """
+        This method will remove a server in Murcs.
+
+        :param serverId: serverId to remove
+
+        :return:
+        """
+        path = "servers/{serverId}".format(serverId=serverId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Remove server {serverId}!".format(serverId=serverId))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)

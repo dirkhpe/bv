@@ -16,6 +16,7 @@ ns = neostore.NeoStore(cfg)
 # Get solution Components
 solcomp_nodes = ns.get_nodes(solcomplbl)
 solcomp_d = {}
+sap_d = {}
 for node in solcomp_nodes:
     solcomp_d[node["solInstId"]] = node
 solcompprops_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["solcompprops"])
@@ -27,10 +28,15 @@ for row in df.iterrows():
     # Get solution  component node
     solInstId = xl.pop("solInstId")
     solcomp_node = solcomp_d[solInstId]
+    sid = xl.pop('propertyValue')
     node_params = dict(
-        name=xl.pop('propertyValue')
+        name=sid
     )
-    sap_node = ns.create_node(sapsidlbl, **node_params)
+    try:
+        sap_node = sap_d[sid]
+    except KeyError:
+        sap_d[sid] = ns.create_node(sapsidlbl, **node_params)
+        sap_node = sap_d[sid]
     ns.create_relation(from_node=solcomp_node, rel=solcomp2sap, to_node=sap_node)
     my_loop.info_loop()
 my_loop.end_loop()
