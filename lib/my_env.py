@@ -204,6 +204,7 @@ def run_script(path, script_name, *args):
     """
     script_path = os.path.join(path, script_name)
     cmd = [sys.executable, script_path] + list(args)
+    # logging.info(cmd)
     subprocess.call(cmd, env=os.environ.copy())
     return
 

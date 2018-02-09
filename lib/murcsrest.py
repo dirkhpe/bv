@@ -408,6 +408,32 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def remove_solComp_property(self, solcomp_rec, propname):
+        """
+        This method will remove a property from a solution component.
+
+        :param solcomp_rec:
+
+        :param propname: property to be removed
+
+        :return:
+        """
+        solId = solcomp_rec["solId"]
+        solInstId = solcomp_rec["solInstId"]
+        path = "solutions/{solId}/solutionInstances/{solInstId}/properties/{prop}"\
+            .format(solId=solId, solInstId=solInstId, prop=propname)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Property {prop} removed from solComp {solInstId}!"
+                         .format(prop=propname, solInstId=solInstId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def remove_solutionInstance(self, solId, solInstId):
         """
         This method will remove a solutionInstance. No additional checking is done, when the function is called then

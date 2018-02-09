@@ -141,6 +141,37 @@ class Murcs:
             logging.debug("Connection Server {h} to Software {sw} not found.".format(h=server_id, sw=soft_id))
             return False
 
+    def get_softInst_fromId(self, instId):
+        """
+        This method will return the software instance record for a specific instance Id. This is required to link a
+        database (schema) to more than one application.
+
+        :param instId: ID of the instance.
+
+        :return: instance record or False if not found.
+        """
+        query = """
+            SELECT i.id as id, i.instId as instId, h.serverId as serverId, s.softId as softId
+            FROM softinst i
+            INNER JOIN soft s on s.id = i.softId
+            INNER JOIN server h on h.id=i.serverId
+            WHERE instId=%(instId)s
+              AND h.id=i.serverId
+              AND s.clientId = %(client_id)s
+        """
+        cols = dict(
+            instId=instId,
+            client_id=self.client_id
+        )
+        self.cur.execute(query, cols)
+        res = self.cur.fetchall()
+        if len(res) > 0:
+            logging.debug("Instance {instId} found.".format(instId=instId))
+            return res[0]
+        else:
+            logging.debug("Instance {instId} not found.".format(instId=instId))
+            return False
+
     def get_sol(self, solId):
         """
         This method will return the id of the solution for this solId, or False if no solution is found for the solId

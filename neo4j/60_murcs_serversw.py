@@ -10,7 +10,7 @@ serverlbl = "Server"
 softVersionlbl = "softVersion"
 # Relations
 server2inst = "serverInst"
-softVersion2inst = "softInst"
+inst2version = "isVersion"
 
 ignore = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "clientId"]
 
@@ -47,5 +47,5 @@ for row in df.iterrows():
                 node_params[k] = xl[k]
     inst_node = ns.create_node(instlbl, **node_params)
     ns.create_relation(from_node=server_node, rel=server2inst, to_node=inst_node)
-    ns.create_relation(from_node=soft_node, rel=softVersion2inst, to_node=inst_node)
+    ns.create_relation(from_node=inst_node, rel=inst2version, to_node=soft_node)
 my_loop.end_loop()
