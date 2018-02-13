@@ -1,5 +1,5 @@
 """
-This script will load a server file.
+This script will load softInst file.
 """
 import argparse
 import logging
@@ -10,10 +10,12 @@ from lib import murcsrest
 if __name__ == "__main__":
     # Configure command line arguments
     parser = argparse.ArgumentParser(
-        description="Load a Server file into Murcs"
+        description="Load a SoftInst file into Murcs"
     )
     parser.add_argument('-f', '--filename', type=str, required=True,
-                        help='Please provide the server file to load.')
+                        help='Please provide the softInst file to load. The file must have softId and serverId, and can'
+                             ' have instType (default: Application), instSubType (DB Schema or environment) OR '
+                             'softInstId')
     args = parser.parse_args()
     cfg = my_env.init_env("bellavista", __file__)
     r = murcsrest.MurcsRest(cfg)
@@ -21,24 +23,16 @@ if __name__ == "__main__":
 
     # Read the file
     df = pandas.read_excel(args.filename)
-    my_loop = my_env.LoopInfo("Servers", 20)
+    my_loop = my_env.LoopInfo("SoftInst", 20)
     for row in df.iterrows():
         my_loop.info_loop()
         # Get excel row in dict format
         xl = row[1].to_dict()
-        serverId = xl.pop("serverId").lower()
-        payload = dict(
-            serverId=serverId
-        )
+        softId = xl.pop("softId")
+        serverId = xl.pop("serverId")
+        params = {}
         for k in xl:
             if pandas.notnull(xl[k]):
-                if k == "hostName":
-                    payload[k] = xl[k].lower()
-                elif k == "siteId":
-                    payload['site'] = dict(
-                        siteId=xl[k]
-                    )
-                else:
-                    payload[k] = xl[k]
-        r.add_server(serverId, payload)
+                params[k] = xl[k]
+        r.add_softInst(softId, serverId, **params)
     my_loop.end_loop()

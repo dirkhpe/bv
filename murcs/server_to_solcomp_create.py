@@ -52,7 +52,11 @@ if __name__ == "__main__":
     soft_id = soft_rec["id"]
     softInstId = "{softId} {serverId} {env}".format(softId=softId, serverId=serverId, env=environment)
     if not mdb.get_softInst(soft_id, server_id, softInstId):
-        r.add_software_instance(soft_rec, server_rec, softInstId, environment)
+        params = dict(
+            softInstId=softInstId,
+            instSubType=environment
+        )
+        r.add_softInst(softId, serverId, **params)
         mdb.recycle()
     softInst_rec = mdb.get_softInst(soft_id, server_id, softInstId)
 

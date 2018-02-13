@@ -86,6 +86,30 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def add_site(self, siteId, payload):
+        """
+        This method will load a server in Murcs.
+
+        :param siteId: siteId to load
+
+        :param payload: Dictionary with properties to load
+
+        :return:
+        """
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "sites/{siteId}".format(siteId=siteId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Load site {siteId}!".format(siteId=siteId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def get_sol(self, solId):
         """
         This method launches the Rest call to get the solution information
@@ -161,7 +185,7 @@ class MurcsRest:
             r.raise_for_status()
         return
 
-    def add_software_instance(self, soft_rec, server_rec, softInstId=False, instSubType=False):
+    def add_softInst(self, softId, serverId, **params):
         """
         This method will link a Software from a solution to a server.
         By default the softInstId is "softId serverId". In case this is softInstance for Application, then
@@ -169,23 +193,24 @@ class MurcsRest:
         and Quality. Environment is also in instSubType then.
         In case this is a database with a known schema, instSubType will have the schema name.
 
-        :param soft_rec:
+        :param softId: ID Name for the Software
 
-        :param server_rec:
+        :param serverId: ID Name for the Server
 
-        :param softInstId: Mandatory for Application Type and environment not Production.
-
-        :param instSubType: (Optional) Schema of the instance, or environment for Application-type software instances.
+        :param params: dictionary with additional attributes. softInstId is mandatory for Type 'Application' Type and
+        environment not Production. instSubType: (Optional) Schema of the instance, or environment for Application-type
+        software instances. instType: Defaults to 'Application'
 
         :return:
         """
-        softId = soft_rec["softId"]
-        serverId = server_rec["serverId"]
-        if softInstId:
-            softwareInstanceId = softInstId
-        else:
+        try:
+            softwareInstanceId = params["softInstId"]
+        except KeyError:
             softwareInstanceId = "{softId} {serverId}".format(softId=softId, serverId=serverId)
-        softwareInstanceType = "Application"
+        try:
+            softwareInstanceType = params["instType"]
+        except KeyError:
+            softwareInstanceType = "Application"
         server = dict(serverId=serverId)
         software = dict(softwareId=softId)
         payload = dict(
@@ -194,8 +219,10 @@ class MurcsRest:
             server=server,
             software=software
         )
-        if instSubType:
-            payload["instanceSubType"] = instSubType
+        try:
+            payload["instanceSubType"] = params["instSubType"]
+        except KeyError:
+            pass
         data = json.dumps(payload)
         logging.debug("Payload: {p}".format(p=data))
         url = self.url_base + "softwareInstances/{softwareInstanceId}".format(softwareInstanceId=softwareInstanceId)

@@ -49,9 +49,8 @@ if __name__ == "__main__":
     # Link Software to Server for the Solution
     server_id = server_rec["id"]
     soft_id = soft_rec["id"]
-    # softInst_rec = mdb.get_softInst(soft_id, server_id)
     if not mdb.get_softInst(soft_id, server_id):
-        r.add_software_instance(soft_rec, server_rec)
+        r.add_softInst(softId, serverId)
         mdb.recycle()
     softInst_rec = mdb.get_softInst(soft_id, server_id)
 

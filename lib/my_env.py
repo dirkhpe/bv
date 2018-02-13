@@ -67,7 +67,6 @@ def init_loghandler(config, modulename):
     # Define logfileName
     logfile = logdir + "/" + modulename + "_" + computername + ".log"
     # Configure the root logger
-    logging.getLogger('neo4j.bolt').setLevel(logging.WARNING)
     logger = logging.getLogger()
     level = logging.getLevelName(loglevel)
     logger.setLevel(level)
@@ -90,7 +89,12 @@ def init_loghandler(config, modulename):
     # Add Formatter to Console Handler
     ch.setFormatter(formatter_console)
     logger.addHandler(ch)
-    # Set Neo4J Logging to Warning only (in case Neo4J is used.
+    """
+    for key in logging.Logger.manager.loggerDict.keys():
+        print("Key: {key}".format(key=key))
+    """
+    logging.getLogger('neo4j.bolt').setLevel(logging.WARNING)
+    logging.getLogger('httpstream').setLevel(logging.WARNING)
     return logger
 
 
