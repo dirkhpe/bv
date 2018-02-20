@@ -1,14 +1,7 @@
 """
-This script will connect a database instance to an solution component. The Database Software and the database instance
-must exist.
+This script will remove a software (database) instance to an solution component. The Software and the (database)
+instance must exist.
 
-Note that during legacy data load, the database instance ID can have a link to a solution ID.
-This is an error  during initial load and prevents a database schema to be used by more than one application. However as
-it is the ID of the instance, there is no easy way to correct this issue.
-
-Therefore to connect a database instance to an application, it is mandatory to work with the instId.
-Note that it is not possible to remove this link, as the softInstance cannot be removed and the solution instance
-cannot be removed. Only the solcompinst record can be removed (manually)...
 """
 import argparse
 import logging
@@ -51,6 +44,6 @@ if __name__ == "__main__":
     softInst_id = softInst_rec["id"]
     serverId = softInst_rec["serverId"]
     softId = softInst_rec["softId"]
-    if not mdb.get_solInstComp(solInst_id, softInst_id):
-        r.add_solInstComp(solcomp_rec, softInst_rec, solId, serverId, softId)
+    if mdb.get_solInstComp(solInst_id, softInst_id):
+        r.remove_solInstComp(solInstId, instId, solId, serverId, softId)
     mdb.close()

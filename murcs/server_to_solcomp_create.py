@@ -20,8 +20,8 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--solId', type=str, required=True,
                         help='Please provide solId to identify the application.')
     parser.add_argument('-e', '--env', type=str, required=True,
-                        choices=['Production', 'Development', 'Quality', 'Compression'],
-                        help='Please provide environment (Production, Quality, Development, Compression)')
+                        choices=['Production', 'Development', 'Quality', 'Other'],
+                        help='Please provide environment (Production, Quality, Development, Other)')
     args = parser.parse_args()
     cfg = my_env.init_env("bellavista", __file__)
     mdb = murcsstore.Murcs(cfg)
@@ -64,5 +64,5 @@ if __name__ == "__main__":
     softInst_id = softInst_rec["id"]
     solInst_id = solcomp_rec["id"]
     if not mdb.get_solInstComp(solInst_id, softInst_id):
-        r.add_solInstComp(solcomp_rec, softInst_rec, solId, serverId, softId)
+        r.add_solInstComp(solInstId, softInstId, solId, serverId, softId)
     mdb.close()

@@ -18,8 +18,8 @@ if __name__ == "__main__":
     parser.add_argument('-l', '--solInstId', type=str, required=True,
                         help='Please provide the current (legacy) solInstId that needs to be renamed.')
     parser.add_argument('-e', '--env', type=str, required=True,
-                        choices=['Production', 'Development', 'Quality'],
-                        help='Select environment (Production, Development, Quality)')
+                        choices=['Production', 'Development', 'Quality', 'Other'],
+                        help='Select environment (Production, Development, Quality, Other)')
     args = parser.parse_args()
     cfg = my_env.init_env("bellavista", __file__)
     mdb = murcsstore.Murcs(cfg)

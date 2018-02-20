@@ -172,6 +172,38 @@ class Murcs:
             logging.debug("Instance {instId} not found.".format(instId=instId))
             return False
 
+    def get_softInst_os(self, hostName):
+        """
+        This method will return the software instance record for an Operating System attached to a servername.
+
+        :param hostName: hostName of the server.
+
+        :return: instance record or False if not found.
+        """
+        query = """
+            SELECT i.id as id, i.instId as instId, h.serverId as serverId, s.softId as softId
+            FROM softinst i
+            INNER JOIN soft s on s.id = i.softId
+            INNER JOIN server h on h.id=i.serverId
+            WHERE h.hostName=%(hostName)s
+              AND h.id=i.serverId
+              AND s.clientId = %(client_id)s
+              AND i.instType = %(instType)s
+        """
+        cols = dict(
+            hostName=hostName,
+            client_id=self.client_id,
+            instType='OperatingSystem'
+        )
+        self.cur.execute(query, cols)
+        res = self.cur.fetchall()
+        if len(res) > 0:
+            logging.debug("OS Instance for host {hostName} found.".format(hostName=hostName))
+            return res[0]
+        else:
+            logging.error("OS Instance for {hostName} not found.".format(hostName=hostName))
+            return False
+
     def get_sol(self, solId):
         """
         This method will return the id of the solution for this solId, or False if no solution is found for the solId

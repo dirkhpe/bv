@@ -102,15 +102,16 @@ def env2abbr(env):
     """
     This method will return the environment abbreviation.
 
-    :param env: Production - Development - Quality
+    :param env: Production - Development - Quality - Other
 
-    :return: prod - dev - qua
+    :return: prod - dev - qua - oth
     """
     env2abbr_dict = dict(
         Production="prod",
         Development="dev",
         Quality="qua",
-        Compression="comp"
+        Compression="comp",
+        Other="oth"
     )
     try:
         return env2abbr_dict[env]

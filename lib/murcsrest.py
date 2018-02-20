@@ -59,6 +59,32 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def add_server_contact(self, serverId, personId, role):
+        """
+        This method will add a Person to a server in a role.
+
+        :param serverId: ID of the server
+
+        :param personId: email of to the Person.
+
+        :param role: Role of the person
+
+        :return:
+        """
+        path = "servers/{serverId}/contactPersons/{personId}/{role}".format(serverId=serverId, personId=personId,
+                                                                            role=role)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Contact {personId} added to server {serverId}!".format(serverId=serverId,
+                                                                                 personId=personId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def add_server_property(self, server_rec, payload):
         """
         This method will add a property to a server.
@@ -154,6 +180,30 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def add_person(self, email, payload):
+        """
+        This method will add a Person to the system.
+
+        :param email: unique identifier for Person
+
+        :param payload: Payload to be added to the Person.
+
+        :return:
+        """
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "persons/{email}".format(email=email)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Load server {email}!".format(email=email))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def add_software_from_sol(self, sol_rec):
         """
         This method will create a Software from a Solution.
@@ -223,6 +273,10 @@ class MurcsRest:
             payload["instanceSubType"] = params["instSubType"]
         except KeyError:
             pass
+        try:
+            payload["description"] = params["description"]
+        except KeyError:
+            pass
         data = json.dumps(payload)
         logging.debug("Payload: {p}".format(p=data))
         url = self.url_base + "softwareInstances/{softwareInstanceId}".format(softwareInstanceId=softwareInstanceId)
@@ -265,13 +319,13 @@ class MurcsRest:
             r.raise_for_status()
         return
 
-    def add_solInstComp(self, solInst_rec, softInst_rec, solId, serverId, softId):
+    def add_solInstComp(self, solInstId, softInstId, solId, serverId, softId):
         """
         This method will add a solutionInstanceComponent as the final link between solution and server.
 
-        :param solInst_rec:
+        :param solInstId:
 
-        :param softInst_rec:
+        :param softInstId:
 
         :param solId:
 
@@ -281,21 +335,19 @@ class MurcsRest:
 
         :return:
         """
-        solutionInstanceId = solInst_rec["solInstId"]
-        softwareInstanceId = softInst_rec["instId"]
         server = dict(serverId=serverId)
         software = dict(softwareId=softId)
         solution = dict(solutionId=solId)
         softwareInstance = dict(
-            softwareInstanceId=softwareInstanceId,
+            softwareInstanceId=softInstId,
             software=software,
             server=server
         )
         solutionInstance = dict(
-            solutionInstanceId=solutionInstanceId,
+            solutionInstanceId=solInstId,
             solution=solution
         )
-        sIC = solutionInstanceId + " " + softwareInstanceId
+        sIC = solInstId + " " + softInstId
         payload = dict(
             solSoftId=sIC,
             solutionInstance=solutionInstance,
@@ -389,6 +441,50 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def add_solution_contact(self, solId, personId, role):
+        """
+        This method will add a Person to a solution in a role.
+
+        :param solId: ID of the solution
+
+        :param personId: email of to the Person.
+
+        :param role: Role of the person
+
+        :return:
+        """
+        path = "solutions/{solId}/contactPersons/{personId}/{role}".format(solId=solId, personId=personId, role=role)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Contact {personId} added to solution {solId}!".format(solId=solId, personId=personId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def remove_person(self, email):
+        """
+        This method will remove a Person.
+
+        :param email: ID (email) of the person to be removed
+
+        :return:
+        """
+        path = "persons/{email}".format(email=email)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Contact {personId} removed!".format(personId=email))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def remove_server(self, serverId):
         """
         This method will remove a server in Murcs.
@@ -435,6 +531,34 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def remove_solComp_contact(self, solId, solInstId, personId, role):
+        """
+        This method will remove a contact in a role from a solution component.
+
+        :param solId: ID of the solution.
+
+        :param solInstId: ID of the solution component
+
+        :param personId: email of the person
+
+        :param role: role for the person
+
+        :return:
+        """
+        path = "solutions/{solId}/solutionInstances/{solInstId}/contactPersons/{personId}/{role}"\
+            .format(solId=solId, solInstId=solInstId, personId=personId, role=role)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Person {email} removed from solComp {solInstId}!"
+                         .format(email=personId, solInstId=solInstId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def remove_solComp_property(self, solcomp_rec, propname):
         """
         This method will remove a property from a solution component.
@@ -461,6 +585,55 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def remove_solInstComp(self, solInstId, softInstId, solId, serverId, softId):
+        """
+        This method will remove a solutionInstanceComponent as the final link between solution and server.
+
+        :param solInstId: ID of the solution Component
+
+        :param softInstId: ID of the software Instance
+
+        :param solId: ID of the solution
+
+        :param serverId: ID of the server
+
+        :param softId: ID of the software
+
+        :return:
+        """
+        # solutionInstanceId = solInst_rec["solInstId"]
+        # softwareInstanceId = softInst_rec["instId"]
+        server = dict(serverId=serverId)
+        software = dict(softwareId=softId)
+        solution = dict(solutionId=solId)
+        softwareInstance = dict(
+            softwareInstanceId=softInstId,
+            software=software,
+            server=server
+        )
+        solutionInstance = dict(
+            solutionInstanceId=solInstId,
+            solution=solution
+        )
+        sIC = solInstId + " " + softInstId
+        payload = dict(
+            solSoftId=sIC,
+            solutionInstance=solutionInstance,
+            softwareInstance=softwareInstance
+        )
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        url = self.url_base + 'solutionInstanceComponents'
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("solution Instance Component {sIC} is removed!".format(sIC=sIC))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def remove_solutionInstance(self, solId, solInstId):
         """
         This method will remove a solutionInstance. No additional checking is done, when the function is called then
@@ -479,6 +652,30 @@ class MurcsRest:
             msg = "solution Instance *{solInstId}* has been deleted from solution *{solId}*".format(solId=solId,
                                                                                                     solInstId=solInstId)
             logging.info(msg)
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def remove_solution_contact(self, solId, personId, role):
+        """
+        This method will remove a Person from a solution in a role.
+
+        :param solId: ID of the solution
+
+        :param personId: email of to the Person.
+
+        :param role: Role of the person
+
+        :return:
+        """
+        path = "solutions/{solId}/contactPersons/{personId}/{role}".format(solId=solId, personId=personId, role=role)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Contact {personId} removed from solution {solId}!".format(solId=solId, personId=personId))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)

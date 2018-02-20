@@ -34,10 +34,9 @@ if __name__ == "__main__":
             if pandas.notnull(xl[k]):
                 if k == "hostName":
                     payload[k] = xl[k].lower()
-                elif k == "siteId":
-                    payload['site'] = dict(
-                        siteId=xl[k]
-                    )
+                elif "_" in k:
+                    (key, name) = k.split("_")
+                    payload[key] = {name: xl[k]}
                 else:
                     payload[k] = xl[k]
         r.add_server(serverId, payload)

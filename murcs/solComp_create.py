@@ -18,8 +18,8 @@ if __name__ == "__main__":
     parser.add_argument('-a', '--solId', type=str, required=True,
                         help='Please provide solId for which a solution Component needs to be added.')
     parser.add_argument('-e', '--env', type=str, required=True,
-                        choices=['Production', 'Development', 'Quality', 'Compression'],
-                        help='Select environment (Production, Development, Quality, Compression)')
+                        choices=['Production', 'Development', 'Quality', 'Other'],
+                        help='Select environment (Production, Development, Quality, Other)')
     args = parser.parse_args()
     cfg = my_env.init_env("bellavista", __file__)
     mdb = murcsstore.Murcs(cfg)
