@@ -10,6 +10,7 @@ from sqlalchemy import Column, Integer, Text, create_engine, ForeignKey, UniqueC
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
+drop_keys = ["Index"]
 Base = declarative_base()
 
 
@@ -168,6 +169,54 @@ class sqliteUtils:
             return db_conn, db_conn.cursor()
         else:
             return False, False
+
+    def create_table(self, tablename, row):
+        """
+        This method will create a table where the fields are the row keys.
+
+        :param tablename: Name of the table
+
+        :param row:
+
+        :return: Length of the row.
+        """
+        for key in drop_keys:
+            if key in row:
+                row.pop(key)
+        query = "DROP TABLE IF EXISTS {tn}".format(tn=tablename)
+        logging.debug("Drop Query: {q}".format(q=query))
+        self.dbConn.execute(query)
+        fieldlist = ["{key} text".format(key=key) for key in row if key is not None]
+        query = "CREATE TABLE {tn} ({fields})".format(tn=tablename, fields=", ".join(fieldlist))
+        logging.debug("Create Query: {q}".format(q=query))
+        self.dbConn.execute(query)
+        logging.info("Table {tn} is built".format(tn=tablename))
+        return len(row)
+
+    def insert_row(self, tablename, rowdict):
+        """
+        This method will insert a dictionary row into a table.
+
+        :param tablename: Table Name to insert data into
+
+        :param rowdict: Row Dictionary
+
+        :return:
+        """
+        if None in rowdict.keys():
+            logging.warning("Table {tn} has None-values: {v}".format(tn=tablename, v=rowdict[None]))
+            rowdict.pop(None)
+        for key in drop_keys:
+            if key in rowdict:
+                rowdict.pop(key)
+        columns = ", ".join(rowdict.keys())
+        values_template = ", ".join(["?"] * len(rowdict.keys()))
+        query = "insert into {tn} ({cols}) values ({vt})".format(tn=tablename, cols=columns, vt=values_template)
+        values = tuple(rowdict[key] for key in rowdict.keys())
+        logging.debug("Insert query: {q}".format(q=query))
+        self.dbConn.execute(query, values)
+        self.dbConn.commit()
+        return
 
     def rebuild(self):
         # A drop for sqlite is a remove of the file
