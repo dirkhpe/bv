@@ -58,5 +58,5 @@ if __name__ == "__main__":
     softInst_id = softInst_rec["id"]
     solInst_id = solInst_rec["id"]
     if not mdb.get_solInstComp(solInst_id, softInst_id):
-        r.add_solInstComp(solInst_rec, softInst_rec, solId, serverId, softId)
+        r.add_solInstComp(solInst_rec["solInstId"], softInst_rec["instId"], solId, serverId, softId)
     mdb.close()

@@ -505,6 +505,29 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def remove_server_property(self, serverId, prop):
+        """
+        This method will delete a property from a server.
+
+        :param serverId: Id of the server
+
+        :param prop: property name of the server
+
+        :return:
+        """
+        path = "servers/{serverId}/properties/{prop}".format(serverId=serverId, prop=prop)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Property {prop} removed from server {serverId}!"
+                         .format(prop=prop, serverId=serverId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def remove_softInst(self, serverId, softId, softInstId):
         """
         This method will remove the softInstance ID. This is the first step to remove the link from server to
