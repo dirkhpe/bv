@@ -17,6 +17,16 @@ ignore = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "client
 cfg = my_env.init_env("bellavista", __file__)
 logging.info("Start Application")
 ns = neostore.NeoStore(cfg)
+
+# First collect all software Instance Properties
+softInstProp_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["softInstProp"])
+df = pandas.read_excel(softInstProp_file)
+instProp = {}
+for row in df.iterrows():
+    xl = row[1].to_dict()
+    instProp[xl.pop("instId")] = dict(Function=xl.pop("propertyValue"))
+
+# Then handle all software Instances
 serversw_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["serversw"])
 df = pandas.read_excel(serversw_file)
 # Get Server Nodes
@@ -45,6 +55,9 @@ for row in df.iterrows():
         if k not in ignore:
             if pandas.notnull(xl[k]):
                 node_params[k] = xl[k]
+    if node_params["instId"] in instProp:
+        for k in instProp[node_params["instId"]]:
+            node_params[k] = instProp[node_params["instId"]][k]
     inst_node = ns.create_node(instlbl, **node_params)
     ns.create_relation(from_node=server_node, rel=server2inst, to_node=inst_node)
     ns.create_relation(from_node=inst_node, rel=inst2version, to_node=soft_node)

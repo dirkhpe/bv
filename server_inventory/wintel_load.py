@@ -11,8 +11,8 @@ from lib import my_env
 from lib.localstore import sqliteUtils
 
 repl = ["VMware, Inc.", "Windows Server 2003,  Standard"]
-# infotypes = ["cpu"]
-infotypes = ["computersystem", "cpu", "diskdrive", "environment", "job", "logicaldisk", "nicconfig", "os", "pagefile",
+infotypes = ["os"]
+info__All = ["computersystem", "cpu", "diskdrive", "environment", "job", "logicaldisk", "nicconfig", "os", "pagefile",
              "partition", "printer", "process", "product", "quotasetting", "service", "share", "sysaccount",
              "useraccount"]
 stats = {}
@@ -64,7 +64,7 @@ for infotype in infotypes:
                                                                                               tn=nr_fields))
                         stats[infotype]["ok"] += 1
                     else:
-                        logging.error("{f} Unexpected Title Row".format(f=file))
+                        logging.error("{f} {tn} fields, {t} expected".format(f=file, tn=len(title), t=nr_fields))
                 else:
                     stats[infotype]["no_info"] += 1
             else:

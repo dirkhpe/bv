@@ -290,6 +290,36 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def add_softInst_property(self, inst_rec, payload):
+        """
+        This method will add a property to a software Instance.
+
+        :param inst_rec: Software Instance record, containing instId, softId, serverID
+
+        :param payload: Dictionary with propertyName, propertyValue and description
+
+        :return:
+        """
+        instId = inst_rec["instId"]
+        softId = inst_rec["softId"]
+        serverId = inst_rec["serverId"]
+        propname = payload["propertyName"]
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "softwareInstances/{serverId}/{softId}/{instId}/properties/{prop}"\
+            .format(softId=softId, instId=instId, prop=propname, serverId=serverId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Property {prop} with value {val} added to softInst {instId}!"
+                         .format(prop=propname, instId=instId, val=payload["propertyValue"]))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def add_solComp_property(self, solcomp_rec, payload):
         """
         This method will add a property to a solution component.
@@ -465,6 +495,34 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def get_softInst_property(self, inst_rec, propname):
+        """
+        This method will add a property to a software Instance.
+
+        :param inst_rec: Software Instance record, containing instId, softId, serverID
+
+        :param propname: propertyName
+
+        :return:
+        """
+        instId = inst_rec["instId"]
+        softId = inst_rec["softId"]
+        serverId = inst_rec["serverId"]
+        path = "softwareInstances/{serverId}/{softId}/{instId}/properties/{prop}"\
+            .format(softId=softId, instId=instId, prop=propname, serverId=serverId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.get(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            return r.json()
+            # logging.info("Property {prop} with value {val} added to softInst {instId}!"
+            #              .format(prop=propname, instId=instId, val=payload["propertyValue"]))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def remove_person(self, email):
         """
         This method will remove a Person.
@@ -548,6 +606,33 @@ class MurcsRest:
         if r.status_code == 200:
             msg = "Link between server {sid} and software {softId} removed".format(sid=serverId, softId=softId)
             logging.info(msg)
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def remove_softInst_property(self, inst_rec, propname):
+        """
+        This method will remove a property from a software Instance.
+
+        :param inst_rec: Software Instance record, containing instId, softId, serverID
+
+        :param propname: propertyName
+
+        :return:
+        """
+        instId = inst_rec["instId"]
+        softId = inst_rec["softId"]
+        serverId = inst_rec["serverId"]
+        path = "softwareInstances/{serverId}/{softId}/{instId}/properties/{prop}"\
+            .format(softId=softId, instId=instId, prop=propname, serverId=serverId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Property {prop} removed to softInst {instId}!"
+                         .format(prop=propname, instId=instId))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)

@@ -144,11 +144,11 @@ class Murcs:
     def get_softInst_fromId(self, instId):
         """
         This method will return the software instance record for a specific instance Id. This is required to link a
-        database (schema) to more than one application.
+        database (schema) to more than one application, or to add a property to a software Instance.
 
         :param instId: ID of the instance.
 
-        :return: instance record or False if not found.
+        :return: instance record or False if not found. Attributes include instId, softId, serverID and id.
         """
         query = """
             SELECT i.id as id, i.instId as instId, h.serverId as serverId, s.softId as softId
