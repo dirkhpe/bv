@@ -396,6 +396,35 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def add_solToSol(self, solToSolId, fromSolId, toSolId, payload):
+        """
+        This method will remove a solution to solution relation.
+
+        :param solToSolId: ID of the solution to Solution Component
+
+        :param fromSolId: ID of the Source Solution Component
+
+        :param toSolId: ID of the Target Solution Component.
+
+        :param payload: Payload for the PUT.
+
+        :return:
+        """
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        url = self.url_base + 'solutionToSolution/{fromSolId}/{toSolId}/{solToSolId}'.format(fromSolId=fromSolId,
+                                                                                             toSolId=toSolId,
+                                                                                             solToSolId=solToSolId)
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("solution to Solution {sIC} is added!".format(sIC=solToSolId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def add_solutionComponent(self, sol_rec, env):
         """
         This method will add a solution Component to a solution. A solution component has an environment identifier.
@@ -736,6 +765,31 @@ class MurcsRest:
         r = requests.delete(url, data=data, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
             logging.info("solution Instance Component {sIC} is removed!".format(sIC=sIC))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def remove_solToSol(self, solToSolId, fromSolId, toSolId):
+        """
+        This method will remove a solution to solution relation.
+
+        :param solToSolId: ID of the solution to Solution Component
+
+        :param fromSolId: ID of the Source Solution Component
+
+        :param toSolId: ID of the Target Solution Component.
+
+        :return:
+        """
+        url = self.url_base + 'solutionToSolution/{fromSolId}/{toSolId}/{solToSolId}'.format(fromSolId=fromSolId,
+                                                                                             toSolId=toSolId,
+                                                                                             solToSolId=solToSolId)
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("solution to Solution {sIC} is removed!".format(sIC=solToSolId))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
