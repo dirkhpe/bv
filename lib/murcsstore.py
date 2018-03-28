@@ -44,6 +44,18 @@ class Murcs:
         self.close()
         self.connect2db()
 
+    def get_query(self, query):
+        """
+        This method will get a query and return the result of the query.
+
+        :param query:
+
+        :return:
+        """
+        self.cur.execute(query)
+        res = self.cur.fetchall()
+        return res
+
     def get_table(self, tablename):
         """
         This method will return the table as a list of named rows. This means that each row in the list will return
@@ -55,6 +67,19 @@ class Murcs:
         self.cur.execute(query)
         res = self.cur.fetchall()
         return res
+
+    def get_fields(self, tablename):
+        """
+        This method will return all fieldnames for a table. It will query the table then return all field names.
+        The assumption is that there is data in the table, otherwise it won't work.
+
+        :param tablename:
+
+        :return:
+        """
+        query = "desc {t}".format(t=tablename)
+        res = self.get_query(query)
+        return [rec["Field"] for rec in res]
 
     def get_client(self, clientid):
         """
