@@ -155,6 +155,18 @@ def get_inifile(projectname):
     return ini_config
 
 
+def fmo_serverId(servername):
+    """
+    This method will return the FMO serverId. The serverId will also be used as FMO hostName.
+    FMO serverId has 'LFR.' in front of servername (lowercase).
+
+    :param servername:
+
+    :return: 'LFR.' + servername.lower()
+    """
+    return "LFR.{s}".format(s=servername.lower())
+
+
 def get_named_row(nr_name, col_hrd):
     """
     This method will create a named tuple row.
