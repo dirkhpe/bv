@@ -85,17 +85,16 @@ class MurcsRest:
             r.raise_for_status()
         return
 
-    def add_server_property(self, server_rec, payload):
+    def add_server_property(self, serverId, payload):
         """
         This method will add a property to a server.
 
-        :param server_rec:
+        :param serverId:
 
         :param payload: Dictionary with propertyName, propertyValue and description
 
         :return:
         """
-        serverId = server_rec["serverId"]
         propname = payload["propertyName"]
         data = json.dumps(payload)
         logging.debug("Payload: {p}".format(p=data))
@@ -198,6 +197,97 @@ class MurcsRest:
         r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
             logging.info("Load server {email}!".format(email=email))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def add_serverNetIface(self, serverId, ifaceName, payload=None):
+        """
+        This method will add a Network Interface to a server.
+
+        :param serverId: unique server Id
+
+        :param ifaceName: Name of the network Interface. netIfaceId is "serverId ifaceName"
+
+        :param payload: Payload to be added.
+
+        :return:
+        """
+        netIfaceId = "{ifaceName} {serverId}".format(serverId=serverId, ifaceName=ifaceName)
+        if not payload:
+            payload = {}
+        payload["networkInterfaceId"] = netIfaceId
+        payload["interfaceName"] = ifaceName
+        payload["serverId"] = serverId
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "{serverId}/serverNetworkInterfaces/{netIfaceId}".format(serverId=serverId, netIfaceId=netIfaceId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Load Network Interface {netIfaceId}!".format(netIfaceId=netIfaceId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def add_serverNetIfaceIp(self, serverId, ifaceName, ipAddress, payload=None):
+        """
+        This method will add a Network Interface to a server.
+
+        :param serverId: unique server Id
+
+        :param ifaceName: Name of the network Interface. netIfaceId is "serverId ifaceName"
+
+        :param ipAddress: IP Address to be added.
+
+        :param payload: Payload to be added.
+
+        :return:
+        """
+        netIfaceId = "{ifaceName} {serverId}".format(serverId=serverId, ifaceName=ifaceName)
+        if not payload:
+            payload = {}
+        payload["networkInterfaceId"] = netIfaceId
+        payload["ipAddress"] = ipAddress
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "{serverId}/serverNetworkInterfaces/{netIfaceId}/serverNetworkInterfacesIpAddress/{ipAddress}"\
+            .format(serverId=serverId, netIfaceId=netIfaceId, ipAddress=ipAddress)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Load IP {ipAddress} to Network Interface {netIfaceId}!".format(netIfaceId=netIfaceId,
+                                                                                         ipAddress=ipAddress))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def add_soft(self, softId, payload):
+        """
+        This method will add a Person to the system.
+
+        :param softId: unique software Id
+
+        :param payload: Payload to be added.
+
+        :return:
+        """
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "software/{softId}".format(softId=softId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Load soft {softId}!".format(softId=softId))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
@@ -349,7 +439,7 @@ class MurcsRest:
             r.raise_for_status()
         return
 
-    def add_solInstComp(self, solInstId, softInstId, solId, serverId, softId):
+    def add_solInstComp(self, solInstId, softInstId, solId, serverId, softId, mode):
         """
         This method will add a solutionInstanceComponent as the final link between solution and server.
 
@@ -362,6 +452,9 @@ class MurcsRest:
         :param serverId:
 
         :param softId:
+
+        :param mode: CMO or FMO. If FMO, validFrom date will be set to '2300-01-01' and the connection will be
+        created for FMO.
 
         :return:
         """
@@ -383,6 +476,8 @@ class MurcsRest:
             solutionInstance=solutionInstance,
             softwareInstance=softwareInstance
         )
+        if mode == 'FMO':
+            payload["validFrom"] = "2030-01-01T00:00:00Z"
         data = json.dumps(payload)
         logging.debug("Payload: {p}".format(p=data))
         url = self.url_base + 'solutionInstanceComponents'

@@ -23,12 +23,16 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--env', type=str, required=True,
                         choices=['Production', 'Development', 'Quality', 'Compression'],
                         help='Please provide environment (Production, Quality, Development, Compression)')
+    parser.add_argument('-m', '--mode', type=str, default='CMO',
+                        choices=['CMO', 'FMO'],
+                        help='Please specify CMO / FMO. CMO is default.')
     args = parser.parse_args()
     cfg = my_env.init_env("bellavista", __file__)
     mdb = murcsstore.Murcs(cfg)
     r = murcsrest.MurcsRest(cfg)
     logging.info("Arguments: {a}".format(a=args))
 
+    mode = args.mode
     solId = args.solId
     hostName = args.hostName
     sol_rec = mdb.get_sol(solId)
@@ -49,12 +53,16 @@ if __name__ == "__main__":
     # Get Link Software to Server for the Solution
     server_id = server_rec["id"]
     soft_id = soft_rec["id"]
-    softInstId = "{softId} {serverId} {env}".format(softId=softId, serverId=serverId, env=args.env)
+    if mode == "FMO":
+        softInstId = "{softId} {serverId} {env} {mode}".format(softId=softId, serverId=serverId,
+                                                               env=args.env, mode=mode)
+    else:
+        softInstId = "{softId} {serverId} {env}".format(softId=softId, serverId=serverId, env=args.env)
     softInst_rec = mdb.get_softInst(soft_id, server_id, softInstId=softInstId)
     if softInst_rec:
         softInstId = softInst_rec["instId"]
         r.remove_softInst(serverId, softId, softInstId)
-    else:
+    elif mode != "FMO":
         # Legacy softInstId did not have env attached to the ID
         softInstId = "{softId} {serverId}".format(softId=softId, serverId=serverId)
         softInst_rec = mdb.get_softInst(soft_id, server_id, softInstId=softInstId)
@@ -63,5 +71,8 @@ if __name__ == "__main__":
             r.remove_softInst(serverId, softId, softInstId)
         else:
             sys.exit("No Software to Server Link for solution {s} and server {h}".format(s=solName, h=hostName))
+    else:
+        # FMO Mode, but softInst record not found.
+        sys.exit("No FMO Software to Server Link for solution {s} and server {h}".format(s=solName, h=hostName))
 
     mdb.close()

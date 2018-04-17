@@ -59,8 +59,8 @@ def get_sla(serverdesc):
     p = re.compile("\d\d.\d% SLA")
     res = p.findall(serverdesc)
     if len(res) == 1:
-        sla = res[0][:len(res[0])-len(" SLA")]
-        return sla
+        v_sla = res[0][:len(res[0])-len(" SLA")]
+        return v_sla
     elif len(res) > 1:
         logging.error("Multiple SLAs found {ss}".format(ss=res))
         return False
@@ -81,7 +81,15 @@ if __name__ == "__main__":
     r = murcsrest.MurcsRest(cfg)
     logging.info("Arguments: {a}".format(a=args))
 
-    # Read the file
+    # Get BellaVista to softId translation
+    os_tx = {}
+    os_filename = cfg["Main"]["translate"]
+    df = pandas.read_excel(os_filename, sheet_name="os")
+    for row in df.iterrows():
+        xl = row[1].to_dict()
+        os_tx[xl["BellaVistaOs"]] = xl["softId"]
+
+    # Read the runbook
     df = pandas.read_excel(args.filename, sheet_name="Server Order", header=1)
     my_loop = my_env.LoopInfo("Runbook", 20)
     for row in df.iterrows():
@@ -91,6 +99,8 @@ if __name__ == "__main__":
         servername = xl.pop("Server Name")
         if pandas.isnull(servername):
             break
+
+        # Add Server
         serverId = my_env.fmo_serverId(servername)
         payload = dict(
             serverId=serverId,
@@ -122,10 +132,55 @@ if __name__ == "__main__":
         else:
             logging.error("Server {s} unknown instance {i} (Physical/Virtual?)".format(s=servername, i=server_instance))
         # Server in DMZ?
-        net = xl["VLAN"]
-        if "DMWeb" in net:
+        ifaceName = xl["VLAN"].strip()
+        if "DMWeb" in ifaceName:
             payload["insideDMZ"] = "Yes"
         else:
             payload["insideDMZ"] = "No"
         r.add_server(serverId, payload)
+
+        # Add Network Interface and IP Addresses
+        r.add_serverNetIface(serverId, ifaceName)
+        # Add "Net30 IP"
+        ipAddress = xl["NET30 IP"]
+        if pandas.notnull(ipAddress):
+            payload = dict(ipAddressType="Net30 IP")
+            r.add_serverNetIfaceIp(serverId, ifaceName, ipAddress, payload)
+        # Add BYOIP
+        ipAddress = xl["BYOIP"]
+        if pandas.notnull(ipAddress):
+            payload["ipAddressType"] = "BYOIP"
+            r.add_serverNetIfaceIp(serverId, ifaceName, ipAddress, payload)
+        # If available, add Public IP Address
+        ipAddress = xl["Public IP"]
+        if pandas.notnull(ipAddress):
+            payload["ipAddressType"] = "Public IP"
+            r.add_serverNetIfaceIp(serverId, ifaceName, ipAddress, payload)
+
+        # Add OS
+        params = dict(
+            instType='OperatingSystem'
+        )
+        r.add_softInst(os_tx[xl["OS"].strip()], serverId, **params)
+
+        # Add Phase as attribute
+        phase = xl["Phase"]
+        if pandas.notnull(phase):
+            payload = dict(
+                propertyName="phase",
+                propertyValue=phase,
+                description="Phase when server has been requested."
+            )
+            r.add_server_property(serverId, payload)
+
+    # Add Environment as attribute
+    env = xl["Environment"]
+    if pandas.notnull(env):
+        payload = dict(
+            propertyName="Environment",
+            propertyValue=env,
+            description="Environment for the server."
+        )
+        r.add_server_property(serverId, payload)
+
     my_loop.end_loop()

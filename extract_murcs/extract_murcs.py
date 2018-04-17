@@ -34,3 +34,4 @@ logging.info("Start Application")
 for script in scripts:
     logging.info("Run script: {s}.py".format(s=script))
     run_script(fp, "{s}.py".format(s=script))
+logging.info("End Application")

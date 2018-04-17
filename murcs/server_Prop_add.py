@@ -42,5 +42,5 @@ if __name__ == "__main__":
         description="{desc} - {now:%Y-%m-%d}".format(desc=description, now=datetime.datetime.now())
     )
 
-    r.add_server_property(server_rec, payload)
+    r.add_server_property(server_rec["serverId"], payload)
     mdb.close()

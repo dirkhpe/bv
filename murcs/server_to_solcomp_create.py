@@ -22,12 +22,16 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--env', type=str, required=True,
                         choices=['Production', 'Development', 'Quality', 'Other'],
                         help='Please provide environment (Production, Quality, Development, Other)')
+    parser.add_argument('-m', '--mode', type=str, default='CMO',
+                        choices=['CMO', 'FMO'],
+                        help='Please specify CMO / FMO. CMO is default.')
     args = parser.parse_args()
     cfg = my_env.init_env("bellavista", __file__)
     mdb = murcsstore.Murcs(cfg)
     r = murcsrest.MurcsRest(cfg)
     logging.info("Arguments: {a}".format(a=args))
 
+    mode = args.mode
     solInstId = my_env.get_solInstId(solId=args.solId, env=args.env)
     hostName = args.hostName
     solcomp_rec = mdb.get_solComp(solInstId)
@@ -50,7 +54,13 @@ if __name__ == "__main__":
     # Link Software to Server for the Solution
     server_id = server_rec["id"]
     soft_id = soft_rec["id"]
-    softInstId = "{softId} {serverId} {env}".format(softId=softId, serverId=serverId, env=environment)
+    # softInstId needs to have mode for FMO!
+    if mode == "FMO":
+        softInstId = "{softId} {serverId} {env} {mode}".format(softId=softId, serverId=serverId,
+                                                               env=environment, mode=mode)
+    else:
+        softInstId = "{softId} {serverId} {env}".format(softId=softId, serverId=serverId,
+                                                        env=environment)
     if not mdb.get_softInst(soft_id, server_id, softInstId):
         params = dict(
             softInstId=softInstId,
@@ -64,5 +74,5 @@ if __name__ == "__main__":
     softInst_id = softInst_rec["id"]
     solInst_id = solcomp_rec["id"]
     if not mdb.get_solInstComp(solInst_id, softInst_id):
-        r.add_solInstComp(solInstId, softInstId, solId, serverId, softId)
+        r.add_solInstComp(solInstId, softInstId, solId, serverId, softId, mode)
     mdb.close()
