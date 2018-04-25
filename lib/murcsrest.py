@@ -339,7 +339,7 @@ class MurcsRest:
 
         :param params: dictionary with additional attributes. softInstId is mandatory for Type 'Application' Type and
         environment not Production. instSubType: (Optional) Schema of the instance, or environment for Application-type
-        software instances. instType: Defaults to 'Application'
+        software instances. instType: Defaults to 'Application'.
 
         :return:
         """

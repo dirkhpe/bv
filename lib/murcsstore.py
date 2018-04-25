@@ -97,6 +97,32 @@ class Murcs:
         else:
             return False
 
+    def get_person(self, email):
+        """
+        This method will return the person record for this email, or False if no person is found for the email
+        and the clientId.
+
+        :param email:
+
+        :return: Dict with id and serverId of the server, or False if the server does not exist.
+        """
+
+        # First get all field names for the table
+        field_array = self.get_fields("person")
+        fields = ", ".join(field_array)
+
+        query = """
+        SELECT {fields}
+        FROM person
+        WHERE clientId={client_id}
+          AND email="{email}";
+        """.format(client_id=self.client_id, email=email, fields=fields)
+        res = self.get_query(query)
+        if len(res) > 0:
+            return res[0]
+        else:
+            return False
+
     def get_server(self, hostName):
         """
         This method will return the id of the server for this hostName, or False if no server is found for the hostName
@@ -239,7 +265,7 @@ class Murcs:
         :return: Dict with the first solution record, or False if the solution does not exist.
         """
         query = "SELECT * FROM sol WHERE solId=%(solId)s AND clientId=%(client_id)s"
-        self.cur.execute(query, {"solId": solId, "client_id": self.client_id})
+        self.cur.execute(query, {"solId": str(solId), "client_id": self.client_id})
         res = self.cur.fetchall()
         if len(res) > 0:
             return res[0]

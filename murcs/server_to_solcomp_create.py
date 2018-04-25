@@ -2,6 +2,12 @@
 This script will connect a server to an solution component in MURCS.
 The purpose is to assign a server to the Development / Quality or Production instance of a solution.
 Note that a server can be connected to more than one instance of a solution.
+
+CMO and FMO are threaded differently.
+In CMO a software is created for each application that needs to be coupled. Then a software instance is set-up on the
+server for the application software, and this software instance is linked to the solution component.
+In FMO the server OS is linked to the solution component, so no additional software for the application has to be
+maintained.
 """
 import argparse
 import logging
@@ -44,31 +50,34 @@ if __name__ == "__main__":
     solId = solcomp_rec["solId"]
     environment = solcomp_rec["environment"]
 
-    # Handle Software for the Solution
-    softId = "{solId} software".format(solId=solId)
-    if not mdb.get_soft(softId):
-        r.add_software_from_sol(solcomp_rec)
-        mdb.recycle()
-    soft_rec = mdb.get_soft(softId)
+    if mode == "CMO":
+        # Handle Software for the Solution
+        softId = "{solId} software".format(solId=solId)
+        if not mdb.get_soft(softId):
+            r.add_software_from_sol(solcomp_rec)
+            mdb.recycle()
+        soft_rec = mdb.get_soft(softId)
 
-    # Link Software to Server for the Solution
-    server_id = server_rec["id"]
-    soft_id = soft_rec["id"]
-    # softInstId needs to have mode for FMO!
-    if mode == "FMO":
-        softInstId = "{softId} {serverId} {env} {mode}".format(softId=softId, serverId=serverId,
-                                                               env=environment, mode=mode)
+        # Link Software to Server for the Solution
+        server_id = server_rec["id"]
+        soft_id = soft_rec["id"]
+        softInstId = "{softId} {serverId} {env}".format(softId=softId, serverId=serverId, env=environment)
+        if not mdb.get_softInst(soft_id, server_id, softInstId):
+            params = dict(
+                softInstId=softInstId,
+                instSubType=environment
+            )
+            r.add_softInst(softId, serverId, **params)
+            mdb.recycle()
+        softInst_rec = mdb.get_softInst(soft_id, server_id, softInstId)
+    elif mode == "FMO":
+        # Get OS instance for the server
+        softInst_rec = mdb.get_softInst_os(hostName)
+        softId = softInst_rec["softId"]
+        softInstId = softInst_rec["instId"]
     else:
-        softInstId = "{softId} {serverId} {env}".format(softId=softId, serverId=serverId,
-                                                        env=environment)
-    if not mdb.get_softInst(soft_id, server_id, softInstId):
-        params = dict(
-            softInstId=softInstId,
-            instSubType=environment
-        )
-        r.add_softInst(softId, serverId, **params)
-        mdb.recycle()
-    softInst_rec = mdb.get_softInst(soft_id, server_id, softInstId)
+        sys.exit("Unknown mode {m}".format(m=mode))
+
 
     # Create Solution Instance Component by linking softInst to SolInst
     softInst_id = softInst_rec["id"]

@@ -19,7 +19,7 @@ if __name__ == "__main__":
         """
     )
     parser.add_argument('-i', '--instId', type=str, required=True,
-                        help='Please provide database instance ID to identify the database (schema) on the server.')
+                        help='Please provide software (db) instance ID.')
     parser.add_argument('-a', '--solId', type=str, required=True,
                         help='Please provide solId to identify the application.')
     parser.add_argument('-e', '--env', type=str, required=True,

@@ -158,13 +158,13 @@ def get_inifile(projectname):
 def fmo_serverId(servername):
     """
     This method will return the FMO serverId. The serverId will also be used as FMO hostName.
-    FMO serverId has 'LFR.' in front of servername (lowercase).
+    FMO serverId has 'VPC.' in front of servername.
 
     :param servername:
 
-    :return: 'LFR.' + servername.lower()
+    :return: 'VPC.' + servername.lower()
     """
-    return "LFR.{s}".format(s=servername.lower())
+    return "VPC.{s}".format(s=servername.lower())
 
 
 def get_named_row(nr_name, col_hrd):

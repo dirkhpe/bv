@@ -81,13 +81,19 @@ if __name__ == "__main__":
     r = murcsrest.MurcsRest(cfg)
     logging.info("Arguments: {a}".format(a=args))
 
-    # Get BellaVista to softId translation
-    os_tx = {}
-    os_filename = cfg["Main"]["translate"]
-    df = pandas.read_excel(os_filename, sheet_name="os")
+    # Get BellaVista to softId translation for OS
+    sw_tx = {}
+    bv_tx_file = cfg["Main"]["translate"]
+    df = pandas.read_excel(bv_tx_file, sheet_name="os")
     for row in df.iterrows():
         xl = row[1].to_dict()
-        os_tx[xl["BellaVistaOs"]] = xl["softId"]
+        sw_tx[xl["BellaVistaOs"]] = xl["softId"]
+
+    # Add BellaVista to softId translation
+    df = pandas.read_excel(bv_tx_file, sheet_name="sw")
+    for row in df.iterrows():
+        xl = row[1].to_dict()
+        sw_tx[xl["BellaVistaSw"]] = xl["softId"]
 
     # Read the runbook
     df = pandas.read_excel(args.filename, sheet_name="Server Order", header=1)
@@ -158,10 +164,31 @@ if __name__ == "__main__":
             r.add_serverNetIfaceIp(serverId, ifaceName, ipAddress, payload)
 
         # Add OS
-        params = dict(
-            instType='OperatingSystem'
-        )
-        r.add_softInst(os_tx[xl["OS"].strip()], serverId, **params)
+        # xl["OS"] should not be empty
+        os = xl["OS"]
+        try:
+            softId = sw_tx[os.strip()]
+        except KeyError:
+            logging.error("OS Version {os} cannot be translated to softId".format(os=os))
+        else:
+            params = dict(
+                instType='OperatingSystem'
+            )
+            r.add_softInst(softId, serverId, **params)
+
+        # Add Database
+        db = xl["Database Version"]
+        if pandas.notnull(db):
+            if db != "N/A":
+                try:
+                    softId = sw_tx[db.strip()]
+                except KeyError:
+                    logging.error("Database Version {db} cannot be translated to softId".format(db=db))
+                else:
+                    params = dict(
+                        instType='Database'
+                    )
+                    r.add_softInst(softId, serverId, **params)
 
         # Add Phase as attribute
         phase = xl["Phase"]
@@ -173,14 +200,14 @@ if __name__ == "__main__":
             )
             r.add_server_property(serverId, payload)
 
-    # Add Environment as attribute
-    env = xl["Environment"]
-    if pandas.notnull(env):
-        payload = dict(
-            propertyName="Environment",
-            propertyValue=env,
-            description="Environment for the server."
-        )
-        r.add_server_property(serverId, payload)
+        # Add Environment as attribute
+        env = xl["Environment"]
+        if pandas.notnull(env):
+            payload = dict(
+                propertyName="Environment",
+                propertyValue=env,
+                description="Environment for the server."
+            )
+            r.add_server_property(serverId, payload)
 
     my_loop.end_loop()

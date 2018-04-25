@@ -32,12 +32,17 @@ if __name__ == "__main__":
     parser.add_argument('-e', '--env', type=str, required=True,
                         choices=['Production', 'Development', 'Quality', 'Other'],
                         help='Please provide environment (Production, Quality, Development, Other)')
+    parser.add_argument('-m', '--mode', type=str, default='CMO',
+                        choices=['CMO', 'FMO'],
+                        help='Please specify CMO / FMO. CMO is default.')
+
     args = parser.parse_args()
     cfg = my_env.init_env("bellavista", __file__)
     mdb = murcsstore.Murcs(cfg)
     r = murcsrest.MurcsRest(cfg)
     logging.info("Arguments: {a}".format(a=args))
 
+    mode = args.mode
     solInstId = my_env.get_solInstId(solId=args.solId, env=args.env)
     solcomp_rec = mdb.get_solComp(solInstId)
     if not solcomp_rec:
@@ -52,5 +57,5 @@ if __name__ == "__main__":
     serverId = softInst_rec["serverId"]
     softId = softInst_rec["softId"]
     if not mdb.get_solInstComp(solInst_id, softInst_id):
-        r.add_solInstComp(solInstId, instId, solId, serverId, softId)
+        r.add_solInstComp(solInstId, instId, solId, serverId, softId, mode)
     mdb.close()
