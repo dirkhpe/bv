@@ -35,6 +35,8 @@ class Write2Excel:
         else:
             # There are sheets already, create a new one
             self.current_sheet = self.wb.create_sheet(title=title)
+        # Reset rowcnt for new sheet in same workbook
+        self.rowcnt = 0
         return self.current_sheet
 
     def close_workbook(self, filename):
