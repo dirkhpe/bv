@@ -40,6 +40,12 @@ for row in df.iterrows():
     inst = xl.pop("softInstId")
     inst_node = instance_d[inst]
     node_params = {}
+    # First check for validFrom - is this FMO mode?
+    mode = xl.pop("validFrom")
+    if pandas.notnull(mode):
+        node_params["mode"] = "FMO"
+    else:
+        node_params["mode"] = "CMO"
     for k in xl:
         if k not in ignore:
             if pandas.notnull(xl[k]):

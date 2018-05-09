@@ -46,7 +46,8 @@ if __name__ == "__main__":
                 softwareVersion=xl["softVersion"],
                 softwareType=xl["softType"],
                 softwareSubType=xl["softSubType"],
-                softwareVender=xl["softVendor"]
+                softwareVendor=xl["softVendor"],
+                inScope="Yes"
             )
             r.add_soft(softId, payload)
 

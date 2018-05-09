@@ -26,7 +26,9 @@ if __name__ == "__main__":
     r = murcsrest.MurcsRest(cfg)
     logging.info("Arguments: {a}".format(a=args))
 
-    hostName = args.hostName
+    server_rec = mdb.get_server(args.hostName)
+    if not server_rec:
+        sys.exit("Server {h} not found...".format(h=args.hostName))
     # Find current OS
     softInst_rec = mdb.get_softInst_os(args.hostName)
     # Remove current OS if available
@@ -38,5 +40,5 @@ if __name__ == "__main__":
     )
     if args.description:
         params["description"] = args.description
-    r.add_softInst(args.softId, softInst_rec["serverId"], **params)
+    r.add_softInst(args.softId, server_rec["serverId"], **params)
     mdb.close()

@@ -346,7 +346,14 @@ class MurcsRest:
         try:
             softwareInstanceId = params["softInstId"]
         except KeyError:
-            softwareInstanceId = "{softId} {serverId}".format(softId=softId, serverId=serverId)
+            # Check if instSubType (schema of the instance) is defined.
+            try:
+                instSubType = params["instSubType"]
+            except KeyError:
+                softwareInstanceId = "{softId} {serverId}".format(softId=softId, serverId=serverId)
+            else:
+                softwareInstanceId = "{schema} {softId} {serverId}".format(softId=softId, serverId=serverId,
+                                                                           schema=instSubType)
         try:
             softwareInstanceType = params["instType"]
         except KeyError:
@@ -933,6 +940,28 @@ class MurcsRest:
         r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
             logging.info("Contact {personId} removed from solution {solId}!".format(solId=solId, personId=personId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def remove_solution_property(self, solId, propertyName):
+        """
+        This method will remove a property attached to a solution
+
+        :param solId:
+
+        :param propertyName:
+
+        :return:
+        """
+        url = self.url_base + "solutions/{solId}/properties/{prop}".format(solId=solId, prop=propertyName)
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            msg = "Property {prop} has been deleted from solution {solId}".format(solId=solId, prop=propertyName)
+            logging.info(msg)
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
