@@ -17,7 +17,7 @@ def add_people():
     :return:
     """
     logging.info("Review people to add to Murcs")
-    dfp = df[["Company", "First name", "Last name", "E-mail"]].drop_duplicates()
+    dfp = df[["First name", "Last name", "E-mail"]].drop_duplicates()
     for prow in dfp.iterrows():
         xl = prow[1].to_dict()
         email = xl["E-mail"]
@@ -29,8 +29,6 @@ def add_people():
                     payload["firstName"] = xl["First name"]
                 if pandas.notnull(xl["Last name"]):
                     payload["lastName"] = xl["Last name"]
-                if pandas.notnull(xl["Company"]):
-                    payload["company"] = xl["Company"]
                 r.add_person(email, payload)
 
 

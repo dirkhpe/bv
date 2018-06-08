@@ -135,6 +135,30 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def add_sol(self, solId, payload):
+        """
+        This method will load a solution in Murcs.
+
+        :param solId: solId to load
+
+        :param payload: Dictionary with properties to load
+
+        :return:
+        """
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "solutions/{solId}".format(solId=solId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Load solution {solId}!".format(solId=solId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def get_sol(self, solId):
         """
         This method launches the Rest call to get the solution information
@@ -196,52 +220,46 @@ class MurcsRest:
         headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
         r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
-            logging.info("Load server {email}!".format(email=email))
+            logging.info("Load person {email}!".format(email=email))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
             r.raise_for_status()
         return
 
-    def add_serverNetIface(self, serverId, ifaceName, payload=None):
+    def add_serverNetIface(self, serverId, ifaceId, payload=None):
         """
         This method will add a Network Interface to a server.
 
         :param serverId: unique server Id
 
-        :param ifaceName: Name of the network Interface. netIfaceId is "serverId ifaceName"
+        :param ifaceId: Network Interface ID.
 
-        :param payload: Payload to be added.
+        :param payload: Payload to be added. serverId and ifaceId must be included in the payload.
 
         :return:
         """
-        netIfaceId = "{ifaceName} {serverId}".format(serverId=serverId, ifaceName=ifaceName)
-        if not payload:
-            payload = {}
-        payload["networkInterfaceId"] = netIfaceId
-        payload["interfaceName"] = ifaceName
-        payload["serverId"] = serverId
         data = json.dumps(payload)
         logging.debug("Payload: {p}".format(p=data))
-        path = "{serverId}/serverNetworkInterfaces/{netIfaceId}".format(serverId=serverId, netIfaceId=netIfaceId)
+        path = "{serverId}/serverNetworkInterfaces/{ifaceId}".format(serverId=serverId, ifaceId=ifaceId)
         url = self.url_base + path
         headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
         r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
-            logging.info("Load Network Interface {netIfaceId}!".format(netIfaceId=netIfaceId))
+            logging.info("Load Network Interface {ifaceId}!".format(ifaceId=ifaceId))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
             r.raise_for_status()
         return
 
-    def add_serverNetIfaceIp(self, serverId, ifaceName, ipAddress, payload=None):
+    def add_serverNetIfaceIp(self, serverId, ifaceId, ipAddress, payload=None):
         """
         This method will add a Network Interface to a server.
 
         :param serverId: unique server Id
 
-        :param ifaceName: Name of the network Interface. netIfaceId is "serverId ifaceName"
+        :param ifaceId: Network Interface ID
 
         :param ipAddress: IP Address to be added.
 
@@ -249,21 +267,20 @@ class MurcsRest:
 
         :return:
         """
-        netIfaceId = "{ifaceName} {serverId}".format(serverId=serverId, ifaceName=ifaceName)
         if not payload:
             payload = {}
-        payload["networkInterfaceId"] = netIfaceId
+        payload["networkInterfaceId"] = ifaceId
         payload["ipAddress"] = ipAddress
         data = json.dumps(payload)
         logging.debug("Payload: {p}".format(p=data))
-        path = "{serverId}/serverNetworkInterfaces/{netIfaceId}/serverNetworkInterfacesIpAddress/{ipAddress}"\
-            .format(serverId=serverId, netIfaceId=netIfaceId, ipAddress=ipAddress)
+        path = "{serverId}/serverNetworkInterfaces/{ifaceId}/serverNetworkInterfacesIpAddress/{ipAddress}"\
+            .format(serverId=serverId, ifaceId=ifaceId, ipAddress=ipAddress)
         url = self.url_base + path
         headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
         r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
-            logging.info("Load IP {ipAddress} to Network Interface {netIfaceId}!".format(netIfaceId=netIfaceId,
-                                                                                         ipAddress=ipAddress))
+            logging.info("Load IP {ipAddress} to Network Interface {ifaceId}!".format(ifaceId=ifaceId,
+                                                                                      ipAddress=ipAddress))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
@@ -446,7 +463,7 @@ class MurcsRest:
             r.raise_for_status()
         return
 
-    def add_solInstComp(self, solInstId, softInstId, solId, serverId, softId, mode):
+    def add_solInstComp(self, solInstId, softInstId, solId, serverId, softId, mode="CMO"):
         """
         This method will add a solutionInstanceComponent as the final link between solution and server.
 
@@ -461,7 +478,7 @@ class MurcsRest:
         :param softId:
 
         :param mode: CMO or FMO. If FMO, validFrom date will be set to '2300-01-01' and the connection will be
-        created for FMO.
+        created for FMO. CMO is default
 
         :return:
         """
@@ -570,7 +587,7 @@ class MurcsRest:
         This method will add a solution Instance to a solution.
         A solution instance is a special kind of solution Component. A solution instance is used if there is only one
         required. If more than one objects are required (e.g. Production, Development, Quality, ...) then a Solution
-        Component need to be used.
+        Component need to be used. Default solution instance is in environment Production.
 
         :param sol_rec: Solution Record.
 
@@ -711,6 +728,54 @@ class MurcsRest:
         if r.status_code == 200:
             logging.info("Property {prop} removed from server {serverId}!"
                          .format(prop=prop, serverId=serverId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def remove_serverNetIface(self, serverId, ifaceId):
+        """
+        This method will remove a Network Interface from a server.
+
+        :param serverId: unique server Id
+
+        :param ifaceId: Network Interface ID.
+
+        :return:
+        """
+        path = "{serverId}/serverNetworkInterfaces/{ifaceId}".format(serverId=serverId, ifaceId=ifaceId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Remove Network Interface {ifaceId}!".format(ifaceId=ifaceId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def remove_serverNetIfaceIp(self, serverId, ifaceId, ipAddress):
+        """
+        This method will remove a Network Interface from a server.
+
+        :param serverId: unique server Id
+
+        :param ifaceId: netIfaceId where IP is connected to.
+
+        :param ipAddress: IP Address to be removed.
+
+        :return:
+        """
+        path = "{serverId}/serverNetworkInterfaces/{ifaceId}/serverNetworkInterfacesIpAddress/{ipAddress}"\
+            .format(serverId=serverId, ifaceId=ifaceId, ipAddress=ipAddress)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Remove IP {ipAddress} from Network Interface {ifaceId}!".format(ifaceId=ifaceId,
+                                                                                          ipAddress=ipAddress))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
@@ -939,7 +1004,9 @@ class MurcsRest:
         headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
         r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
-            logging.info("Contact {personId} removed from solution {solId}!".format(solId=solId, personId=personId))
+            logging.info("Contact {personId} role {r} removed from solution {solId}!".format(solId=solId,
+                                                                                             personId=personId,
+                                                                                             r=role))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)

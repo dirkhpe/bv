@@ -19,33 +19,17 @@ solution_d = {}
 for node in solution_nodes:
     solution_d[node["solId"]] = node
 appsgroup_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["appsgroup"])
-# First handle wave information
-df = pandas.read_excel(appsgroup_file, sheet_name="waves")
 wave_d = {}
-for row in df.iterrows():
-    # Get excel row in dict format
-    xl = row[1].to_dict()
-    node_params = dict(
-        name=xl.pop("Name"),
-        wave=xl.pop("Wave")
-    )
-    for k in xl:
-        if pandas.notnull(xl[k]):
-            if isinstance(xl[k], pandas._libs.Timestamp):
-                node_params[k] = xl[k].strftime("%Y-%m-%d")
-            else:
-                node_params[k] = xl[k]
-    wave_d[node_params["wave"]] = ns.create_node(wavelbl, **node_params)
 
-# Then handle solution per wave
-df = pandas.read_excel(appsgroup_file, sheet_name="full list")
+# Handle solution per wave
+df = pandas.read_excel(appsgroup_file, sheet_name="applications")
 my_loop = my_env.LoopInfo("AppsGroup", 20)
 for row in df.iterrows():
     # Get excel row in dict format
     xl = row[1].to_dict()
     # Get solution component node
     # Only handle file if Migration group is available.
-    miggroup = xl["Wave"]
+    miggroup = xl["WAVE-GROUP"]
     if pandas.isnull(miggroup):
         miggroup = "NA"
     try:
@@ -56,7 +40,7 @@ for row in df.iterrows():
         )
         wave_d[miggroup] = ns.create_node(wavelbl, **node_params)
         wave_node = wave_d[miggroup]
-    solId = xl["Unique ID"]
+    solId = xl["UniqueId"]
     if pandas.notnull(solId):
         try:
             sol_node = solution_d[str(int(solId))]

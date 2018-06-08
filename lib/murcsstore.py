@@ -130,7 +130,7 @@ class Murcs:
 
         :param hostName:
 
-        :return: Dict with id and serverId of the server, or False if the server does not exist.
+        :return: Dict with server record including id and serverId of the server, or False if the server does not exist.
         """
         query = "SELECT * FROM server WHERE hostName=%(hostName)s AND clientId=%(client_id)s"
         self.cur.execute(query, {"hostName": hostName, "client_id": self.client_id})
