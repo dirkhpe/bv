@@ -164,8 +164,8 @@ def fmo_serverId(fqdn):
 
     :return: 'VPC.' + servername.lower()
     """
-    fqdn_arr = fqdn.split(".")
-    return "VPC.{h}".format(h=fqdn_arr[0].lower())
+    fqdn_arr = fqdn.strip().lower().split(".")
+    return "VPC.{h}".format(h=fqdn_arr[0])
 
 
 def get_named_row(nr_name, col_hrd):

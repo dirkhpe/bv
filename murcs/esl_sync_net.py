@@ -37,7 +37,8 @@ if __name__ == "__main__":
     INNER JOIN servernetiface sni on sni.serverId=server.id
     WHERE client.clientId = "{clientId}"
     AND server.hostName LIKE "VPC.%"
-    """.format(clientId=cfg["Murcs"]["clientId"])
+    AND sni.netIfaceId like "{src}|%"
+    """.format(clientId=cfg["Murcs"]["clientId"], src=src_name)
 
     res = mdb.get_query(query)
     for rec in res:
