@@ -1,5 +1,5 @@
 """
-This script will load a server file.
+This script will load a solution file.
 """
 import argparse
 import logging

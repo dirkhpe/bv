@@ -361,37 +361,25 @@ class MurcsRest:
         :return:
         """
         try:
-            softwareInstanceId = params["softInstId"]
+            softwareInstanceId = params.pop("softInstId")
         except KeyError:
             # Check if instSubType (schema of the instance) is defined.
             try:
-                instSubType = params["instSubType"]
+                instSubType = params.pop("instSubType")
             except KeyError:
                 softwareInstanceId = "{softId} {serverId}".format(softId=softId, serverId=serverId)
             else:
                 softwareInstanceId = "{schema} {softId} {serverId}".format(softId=softId, serverId=serverId,
                                                                            schema=instSubType)
         try:
-            softwareInstanceType = params["instType"]
+            softwareInstanceType = params.pop("instType")
         except KeyError:
             softwareInstanceType = "Application"
-        server = dict(serverId=serverId)
-        software = dict(softwareId=softId)
-        payload = dict(
-            softwareInstanceId=softwareInstanceId,
-            softwareInstanceType=softwareInstanceType,
-            server=server,
-            software=software
-        )
-        try:
-            payload["instanceSubType"] = params["instSubType"]
-        except KeyError:
-            pass
-        try:
-            payload["description"] = params["description"]
-        except KeyError:
-            pass
-        data = json.dumps(payload)
+        params["server"] = dict(serverId=serverId)
+        params["software"] = dict(softwareId=softId)
+        params["softwareInstanceId"] = softwareInstanceId
+        params["softwareInstanceType"] = softwareInstanceType
+        data = json.dumps(params)
         logging.debug("Payload: {p}".format(p=data))
         url = self.url_base + "softwareInstances/{softwareInstanceId}".format(softwareInstanceId=softwareInstanceId)
         headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
