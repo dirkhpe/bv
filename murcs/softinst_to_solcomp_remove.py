@@ -1,5 +1,5 @@
 """
-This script will remove a software (database) instance to an solution component. The Software and the (database)
+This script will remove a software (database) instance from a solution component. The Software and the (database)
 instance must exist.
 
 """
@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # Configure command line arguments
     parser = argparse.ArgumentParser(
         description="""
-        Connect a database instance to a solution component. The (database) software must exist before and the database
+        Remove a db or sw instance from a solution component. The (database) software must exist before and the database
         instance (server to database software using schema name) must exist.
         """
     )

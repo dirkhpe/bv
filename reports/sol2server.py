@@ -19,6 +19,11 @@ if __name__ == "__main__":
            sol.solId, sol.solName, sol.inScope as applInScope, sol.applicationTreatment, sol.applicationDetailTreatment,
            sol.customerBusinessUnit, sol.customerBusinessDivision, sol.supportBusinessUnit, sol.supportBusinessDivision,
            solinst.environment,
+           CASE
+               WHEN solinstcomponent.validFrom is NULL THEN 'CMO'
+            ELSE 'FMO'
+            END
+           as mode,
            server.brand, server.category, server.domain, server.hostName, server.hwModel,
            server.inScope as serverInScope, server.serverId, server.subCategory, server.systemLocation,
            parent.hostName as parent, site.siteId as site, server.clockSpeedGhz, server.clusterName, server.coreCount,

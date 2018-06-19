@@ -20,7 +20,7 @@ if __name__ == "__main__":
            server.inScope as serverInScope, server.serverId, server.subCategory, server.systemLocation,
            parent.hostName as parent, site.siteId as site, server.clockSpeedGhz, server.clusterName, server.coreCount,
            server.cpuCount, server.cpuType, server.lifeCycleState, server.memorySizeInByte as memSizeByte,
-           softinst.instType, soft.softName, soft.softVersion
+           softinst.instType, soft.softName, soft.softVersion, soft.softId
     FROM server
     INNER JOIN client ON client.id=server.clientId
     INNER JOIN softinst ON server.id=softinst.serverId

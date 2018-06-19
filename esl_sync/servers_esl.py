@@ -8,6 +8,7 @@ import pandas
 from lib import my_env
 from lib import murcsrest, murcsstore
 
+dc_names = ["EMEA-DE-Frankfurt-eshelter-B"]
 ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "clientId"]
 
 if __name__ == "__main__":
@@ -52,13 +53,14 @@ if __name__ == "__main__":
         # Get excel row in dict format
         xl = row[1].to_dict()
         # Only handle systems from VPC.
-        if xl["DC Name"] == "EMEA-DE-Frankfurt-eshelter-B":
+        if xl["DC Name"] in dc_names:
             host = my_env.fmo_serverId(xl["System Name"])
             srv_in_esl.append(host)
             # Create dictionary with info from ESL
             serverprops = dict(
                 hostName=host,
-                serverId=host
+                serverId=host,
+                site=dict(siteId=xl["DC Name"])
             )
             # Add fixed strings to dictionary
             for k in m2e_fixed:
@@ -82,8 +84,11 @@ if __name__ == "__main__":
             if server_rec:
                 # Remember softId for OS
                 soft_rec = mdb.get_softInst_os(host)
+                os_id = "to be defined"
                 if soft_rec:
                     os_id = soft_rec["softId"]
+                else:
+                    del os_id
                 # Update existing server record
                 for k in server_rec:
                     if not ((k in ignore) or (k in m2e) or (k in m2e_fixed)):
