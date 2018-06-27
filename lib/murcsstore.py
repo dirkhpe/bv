@@ -97,6 +97,27 @@ class Murcs:
         else:
             return False
 
+    def get_name_id(self, table, field, id):
+        """
+        This method will return the name for the ID in the table. Typically it will find the serverId in the server
+        table for the record ID (although name can also be hostName
+
+        :param table: tablename to query
+
+        :param field: Fieldname for which the value is required
+
+        :param id: record number in the query
+
+        :return: Value in the field for table and record ID.
+        """
+
+        query = "SELECT {field} FROM {table} WHERE id={id}".format(field=field, table=table, id=id)
+        res = self.get_query(query)
+        if len(res) > 0:
+            return res[0][field]
+        else:
+            return False
+
     def get_person(self, email):
         """
         This method will return the person record for this email, or False if no person is found for the email
@@ -125,8 +146,8 @@ class Murcs:
 
     def get_server(self, hostName):
         """
-        This method will return the id of the server for this hostName, or False if no server is found for the hostName
-        and the clientId.
+        This method will return the server record for the server with this hostName, or False if no server is found
+        for the hostName and the clientId.
 
         :param hostName:
 
@@ -134,6 +155,22 @@ class Murcs:
         """
         query = "SELECT * FROM server WHERE hostName=%(hostName)s AND clientId=%(client_id)s"
         self.cur.execute(query, {"hostName": hostName, "client_id": self.client_id})
+        res = self.cur.fetchall()
+        if len(res) > 0:
+            return res[0]
+        else:
+            return False
+
+    def get_server_from_serverId(self, serverId):
+        """
+        This method will return the server record for the server with this serverId, or False if no server is found.
+
+        :param serverId:
+
+        :return: Dict with server record including id and serverId of the server, or False if the server does not exist.
+        """
+        query = "SELECT * FROM server WHERE serverId=%(sid)s AND clientId=%(client_id)s"
+        self.cur.execute(query, {"sid": serverId, "client_id": self.client_id})
         res = self.cur.fetchall()
         if len(res) > 0:
             return res[0]

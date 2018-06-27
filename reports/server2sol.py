@@ -16,13 +16,13 @@ if __name__ == "__main__":
     query = """
     SELECT distinct
            server.serverId, server.hostName, server.domain, server.hwModel, server.lifeCycleState,
-           server.inScope as serverInScope, server.subCategory, server.service,
+           server.inScope as serverInScope, server.subCategory, server.service, server.supportGroup,
            CASE
                WHEN solinstcomponent.validFrom is NULL THEN 'not connected'
             ELSE 'FMO'
             END
            as mode,
-           soft.softName, soft.softVersion,
+           soft.softName, soft.softVersion, softinst.patchLevel,
            sol.solId, sol.solName, sol.inScope as applInScope, solinst.environment
     FROM server
     INNER JOIN client ON client.id=server.clientId

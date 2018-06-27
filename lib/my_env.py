@@ -251,7 +251,8 @@ class LoopInfo:
     def info_loop(self):
         """
         Check number of iterations. Print message if number of iterations greater or equal than triggercnt.
-        :return:
+
+        :return: Count
         """
         self.rec_cnt += 1
         self.loop_cnt += 1
@@ -259,7 +260,7 @@ class LoopInfo:
             curr_time = datetime.now().strftime("%H:%M:%S")
             print("{0} - {1} {2} handled".format(curr_time, str(self.rec_cnt), str(self.attribname)))
             self.loop_cnt = 0
-        return
+        return self.rec_cnt
 
     def end_loop(self):
         curr_time = datetime.now().strftime("%H:%M:%S")

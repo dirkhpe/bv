@@ -9,7 +9,7 @@ from lib import my_env
 from lib import murcsrest, murcsstore
 
 dc_names = ["EMEA-DE-Frankfurt-eshelter-B"]
-ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "clientId"]
+ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "clientId", "siteId"]
 
 if __name__ == "__main__":
     # Configure command line arguments
@@ -29,8 +29,8 @@ if __name__ == "__main__":
     bv_tx_file = cfg["Main"]["translate"]
     df = pandas.read_excel(bv_tx_file, sheet_name="os")
     for row in df.iterrows():
-        xl = row[1].to_dict()
-        sw_tx[xl["BellaVistaOs"]] = xl["softId"]
+        esl = row[1].to_dict()
+        sw_tx[esl["BellaVistaOs"]] = esl["softId"]
 
     # Get MURCS - ESL mapping
     m2e = {}
@@ -38,11 +38,11 @@ if __name__ == "__main__":
     m2e_file = cfg["Murcs"]["murcs2esl_server"]
     df = pandas.read_excel(m2e_file)
     for row in df.iterrows():
-        xl = row[1].to_dict()
-        if pandas.notnull(xl["esl"]):
-            m2e[xl["murcs"]] = xl["esl"]
-        elif pandas.notnull(xl["fixed"]):
-            m2e_fixed[xl["murcs"]] = xl["fixed"]
+        esl = row[1].to_dict()
+        if pandas.notnull(esl["esl"]):
+            m2e[esl["murcs"]] = esl["esl"]
+        elif pandas.notnull(esl["fixed"]):
+            m2e_fixed[esl["murcs"]] = esl["fixed"]
 
     srv_in_esl = []
     # Read the ESL report to load/update systems in MURCS.
@@ -51,37 +51,42 @@ if __name__ == "__main__":
     for row in df.iterrows():
         my_loop.info_loop()
         # Get excel row in dict format
-        xl = row[1].to_dict()
+        esl = row[1].to_dict()
         # Only handle systems from VPC.
-        if xl["DC Name"] in dc_names:
-            host = my_env.fmo_serverId(xl["System Name"])
+        if esl["DC Name"] in dc_names:
+            host = my_env.fmo_serverId(esl["System Name"])
             srv_in_esl.append(host)
             # Create dictionary with info from ESL
             serverprops = dict(
                 hostName=host,
                 serverId=host,
-                site=dict(siteId=xl["DC Name"])
+                site=dict(siteId=esl["DC Name"])
             )
             # Add fixed strings to dictionary
             for k in m2e_fixed:
                 serverprops[k] = m2e_fixed[k]
             # Add variable ESL information to dictionary
             for k in m2e:
-                if pandas.notnull(xl[m2e[k]]):
+                if pandas.notnull(esl[m2e[k]]):
                     if k == "domain":
                         # Remove host from fqdn to get domain
-                        fqdn = xl[m2e[k]]
+                        fqdn = esl[m2e[k]]
                         serverprops[k] = fqdn[fqdn.index(".")+1:]
                     elif k == "memorySizeInByte":
-                        serverprops[k] = xl[m2e[k]] * 1024 * 1024
+                        serverprops[k] = esl[m2e[k]] * 1024 * 1024
                     elif k == "clockSpeedGhz":
-                        serverprops[k] = xl[m2e[k]] / 1000
+                        serverprops[k] = esl[m2e[k]] // 1000
+                    elif k == "serverType":
+                        if esl[m2e[k]] == "yes":
+                            serverprops[k] = "VIRTUAL"
+                        else:
+                            serverprops[k] = "PHYSICAL"
                     else:
-                        serverprops[k] = xl[m2e[k]]
+                        serverprops[k] = esl[m2e[k]]
                     # if null then k will not be added to serverprops so value in Murcs will be set to blank
             # Check for update or new record
-            server_rec = mdb.get_server(host)
-            if server_rec:
+            murcs_rec = mdb.get_server(host)
+            if murcs_rec:
                 # Remember softId for OS
                 soft_rec = mdb.get_softInst_os(host)
                 os_id = "to be defined"
@@ -89,15 +94,34 @@ if __name__ == "__main__":
                     os_id = soft_rec["softId"]
                 else:
                     del os_id
-                # Update existing server record
-                for k in server_rec:
+                # Update existing server record to guarantee that all murcs fields are in serverprops.
+                for k in murcs_rec:
                     if not ((k in ignore) or (k in m2e) or (k in m2e_fixed)):
-                        if pandas.notnull(server_rec[k]):
-                            serverprops[k] = server_rec[k]
-            r.add_server(host, serverprops)
+                        if pandas.notnull(murcs_rec[k]):
+                            serverprops[k] = murcs_rec[k]
+                # Now find fields that are updated or changed - murcs_rec is what we know. Does serverprops add info?
+                # Check for new fields in ESL not yet in Murcs
+                # I cannot find fields in Murcs no longer in ESL.
+                updates = []
+                for k in serverprops:
+                    if k not in ["site"]:
+                        # Change in site is not picked up.
+                        try:
+                            if str(serverprops[k]) != str(murcs_rec[k]):
+                                # Update in field
+                                updates.append((k, serverprops[k]))
+                        except KeyError:
+                            # New field, not yet in Murcs
+                            logging.info("New field {p}".format(p=(k, serverprops[k])))
+                            updates.append((k, serverprops[k]))
+                if len(updates) > 0:
+                    logging.info("Update on {s}: {u}".format(s=serverprops["hostName"], u=updates))
+                    r.add_server(host, serverprops)
+            else:
+                r.add_server(host, serverprops)
 
             # Add OS if new or Update compared to previous version
-            os = xl["OS Version"]
+            os = esl["OS Version"]
             try:
                 softId = sw_tx[os.strip()]
             except KeyError:
