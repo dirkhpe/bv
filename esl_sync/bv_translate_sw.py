@@ -39,6 +39,7 @@ def handle_tx_file(sheet):
                 inScope="Yes"
             )
             r.add_soft(softId, payload)
+            softId_arr.append(softId)
     my_loop.end_loop()
 
 if __name__ == "__main__":

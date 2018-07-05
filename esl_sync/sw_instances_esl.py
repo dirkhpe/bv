@@ -1,7 +1,12 @@
 """
 This script will sync software from ESL with MURCS. This does not include OS. OS is handled from servers_esl.py.
+Software in ESL is defined in the categories from whitelist. Note that "engine" is in the blacklist. This means that
+for every engine there needs to be a corresponding software component. For example, a DB engine needs to have an entry
+with SW Category database.
+It can happen that a database is removed and not discovered in ESL. In this case the database will be removed from
+MURCS.
 
-It will remove software implementations from MURCS that is no longer in ESL.
+It will remove software implementations from MURCS that are no longer in ESL.
 """
 import argparse
 import logging
@@ -79,6 +84,8 @@ if __name__ == "__main__":
                     except KeyError:
                         logging.error("No translation to softId for {lbl}".format(lbl=lbl))
                     else:
+                        # softId can have _ as part of the name, so instId construction is not optimal since _ cannot
+                        # be used as a field delimiter.
                         instId = "{src}_{softId}_{sys}".format(src=src_name, softId=softId, sys=serverId)
                         swinst_in_esl.append(instId)
                         if instId not in swinst_in_murcs:
@@ -97,7 +104,12 @@ if __name__ == "__main__":
     # Now remove entries in MURCS that are no longer in ESL
     rem_instances = [lbl for lbl in swinst_in_murcs if lbl not in swinst_in_esl]
     for lbl in rem_instances:
-        src, softId, serverId = lbl.split("_")
+        # _ cannot be used as field delimiter to split src, softId, serverId
+        # Remove src from label, then split on _VPC. identifier
+        soft_server = lbl[len(src_name)+1:]
+        ss_delim_pos = soft_server.find("_VPC.")
+        softId = soft_server[:ss_delim_pos]
+        serverId = soft_server[ss_delim_pos+1:]
         r.remove_softInst(serverId, softId, lbl)
 
     mdb.close()
