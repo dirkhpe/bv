@@ -28,7 +28,8 @@ if __name__ == "__main__":
            server.inScope as serverInScope, server.serverId, server.subCategory, server.systemLocation,
            parent.hostName as parent, site.siteId as site, server.clockSpeedGhz, server.clusterName, server.coreCount,
            server.cpuCount, server.cpuType, server.lifeCycleState, server.memorySizeInByte as memSizeByte,
-           soft.softName, soft.softVersion
+           soft.softName, soft.softVersion, jch.propertyValue as JimmyChoo, bly.propertyValue as Bally,
+           bff.propertyValue as Belstaff
     FROM sol
     INNER JOIN client ON client.id=sol.clientId
     INNER JOIN solinst ON solinst.solId=sol.id
@@ -39,6 +40,9 @@ if __name__ == "__main__":
     LEFT JOIN site ON server.siteId=site.id
     LEFT JOIN softinst osinst ON osinst.serverId=server.id
     LEFT JOIN soft ON osinst.softId=soft.id
+    LEFT JOIN solproperty jch ON jch.solId=sol.id AND jch.propertyName="BusinessUsageJCH"
+    LEFT JOIN solproperty bly ON bly.solId=sol.id AND bly.propertyName="BusinessUsageBLY"
+    LEFT JOIN solproperty bff ON bff.solId=sol.id AND bff.propertyName="BusinessUsageBFF"
     WHERE client.clientId="{clientId}"
       AND osinst.instType="OperatingSystem";
     """.format(clientId=cfg["Murcs"]["clientId"])
