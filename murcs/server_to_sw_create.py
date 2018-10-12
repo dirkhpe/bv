@@ -26,15 +26,20 @@ if __name__ == "__main__":
     r = murcsrest.MurcsRest(cfg)
     logging.info("Arguments: {a}".format(a=args))
 
+    # Get server record
     hostName = args.hostName
     server_rec = mdb.get_server(hostName)
     if not server_rec:
         sys.exit("Server {h} not found.".format(h=hostName))
     serverId = server_rec["serverId"]
 
+    # Get SW record, to know the softSubType. This will be used for instType attribute from SWInstance
+    soft_rec = mdb.get_soft(args.softId)
+    instType = soft_rec["softSubType"]
+
     # Then add requested OS
     params = dict(
-        instType='Database'
+        instType=instType
     )
     if args.instance:
         params["instSubType"] = args.instance

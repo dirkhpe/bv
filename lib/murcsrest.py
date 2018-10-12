@@ -371,6 +371,7 @@ class MurcsRest:
             else:
                 softwareInstanceId = "{schema} {softId} {serverId}".format(softId=softId, serverId=serverId,
                                                                            schema=instSubType)
+                params["instanceSubType"] = instSubType
         try:
             softwareInstanceType = params.pop("instType")
         except KeyError:
