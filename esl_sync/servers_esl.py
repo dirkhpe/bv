@@ -86,14 +86,13 @@ if __name__ == "__main__":
                     # if null then k will not be added to serverprops so value in Murcs will be set to blank
             # Check for update or new record
             murcs_rec = mdb.get_server(host)
+            initialize_os_id = "to be defined"
+            os_id = initialize_os_id
             if murcs_rec:
                 # Remember softId for OS
                 soft_rec = mdb.get_softInst_os(host)
-                os_id = "to be defined"
                 if soft_rec:
                     os_id = soft_rec["softId"]
-                else:
-                    del os_id
                 # Update existing server record to guarantee that all murcs fields are in serverprops.
                 for k in murcs_rec:
                     if not ((k in ignore) or (k in m2e) or (k in m2e_fixed)):
@@ -128,15 +127,14 @@ if __name__ == "__main__":
                 logging.error("OS Version {os} cannot be translated to softId".format(os=os))
             else:
                 # Check if this is update OS or new OS definition. Don't update if OK already
-                try:
-                    if os_id != softId:
-                        logging.info("Server {h} new OS {s} (from {o})".format(h=host, s=softId, o=os_id))
-                        params = dict(
-                            instType='OperatingSystem'
-                        )
-                        r.add_softInst(softId, host, **params)
-                except NameError:
+                if os_id == initialize_os_id:
                     # No OS found for this server in MURCS
+                    params = dict(
+                        instType='OperatingSystem'
+                    )
+                    r.add_softInst(softId, host, **params)
+                elif os_id != softId:
+                    logging.info("Server {h} new OS {s} (from {o})".format(h=host, s=softId, o=os_id))
                     params = dict(
                         instType='OperatingSystem'
                     )
@@ -145,7 +143,7 @@ if __name__ == "__main__":
 
     # Now find servers in MURCS that are not in ESL.
     query = """
-    SELECT server.hostName as hostName
+    SELECT server.hostName as hostName, server.serverId as serverId
     FROM server
     INNER JOIN client on server.clientId=client.id
     WHERE client.clientId = "{clientId}"
@@ -156,3 +154,4 @@ if __name__ == "__main__":
     for rec in res:
         if rec["hostName"] not in srv_in_esl:
             logging.error("Server {h} in MURCS, not in ESL.".format(h=rec["hostName"]))
+            r.remove_server(rec["serverId"])
