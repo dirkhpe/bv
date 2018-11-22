@@ -21,7 +21,7 @@ solution_d = {}
 for node in solution_nodes:
     solution_d[node["solId"]] = node
 solcomp_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["solcomp"])
-df = pandas.read_excel(solcomp_file)
+df = pandas.read_excel(solcomp_file, converters={'solId': str})
 my_loop = my_env.LoopInfo("SolComp", 20)
 for row in df.iterrows():
     # Get excel row in dict format
