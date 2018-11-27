@@ -118,6 +118,20 @@ class Murcs:
         else:
             return False
 
+    def get_parentserver_dict(self, serverid):
+        """
+        This method will return the parentserver dictionary to be included in server properties for loading into Murcs.
+        :param serverid:
+        :return: Dict with parentserver information.
+        """
+        query = "SELECT serverId FROM server WHERE id=%(serverid)s AND clientId=%(client_id)s"
+        self.cur.execute(query, {"serverid": serverid, "client_id": self.client_id})
+        res = self.cur.fetchall()
+        if len(res) > 0:
+            return res[0]
+        else:
+            return False
+
     def get_person(self, email):
         """
         This method will return the person record for this email, or False if no person is found for the email
@@ -148,9 +162,7 @@ class Murcs:
         """
         This method will return the server record for the server with this hostName, or False if no server is found
         for the hostName and the clientId.
-
         :param hostName:
-
         :return: Dict with server record including id and serverId of the server, or False if the server does not exist.
         """
         query = "SELECT * FROM server WHERE hostName=%(hostName)s AND clientId=%(client_id)s"
@@ -171,6 +183,20 @@ class Murcs:
         """
         query = "SELECT * FROM server WHERE serverId=%(sid)s AND clientId=%(client_id)s"
         self.cur.execute(query, {"sid": serverId, "client_id": self.client_id})
+        res = self.cur.fetchall()
+        if len(res) > 0:
+            return res[0]
+        else:
+            return False
+
+    def get_site_dict(self, siteid):
+        """
+        This method will return the site dictionary to be included in server properties for loading into Murcs.
+        :param siteid:
+        :return: Dict with site information.
+        """
+        query = "SELECT siteId FROM site WHERE id=%(siteid)s AND clientId=%(client_id)s"
+        self.cur.execute(query, {"serverid": siteid, "client_id": self.client_id})
         res = self.cur.fetchall()
         if len(res) > 0:
             return res[0]

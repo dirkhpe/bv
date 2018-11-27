@@ -14,6 +14,8 @@ import subprocess
 from collections import namedtuple
 from datetime import datetime
 
+server_ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy",
+                 "clientId", "siteId", "version", "dataQuality"]
 
 def init_env(projectname, filename):
     """

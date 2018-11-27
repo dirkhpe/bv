@@ -32,7 +32,7 @@ if __name__ == "__main__":
         serverprops["service"] = args.description
         for k in server_rec:
             if k not in ignore:
-                if pandas.notnull(server_rec[k]):
+                if len(server_rec[k]) > 0:
                     serverprops[k] = server_rec[k]
     r.add_server(server_rec["serverId"], serverprops)
     mdb.close()
