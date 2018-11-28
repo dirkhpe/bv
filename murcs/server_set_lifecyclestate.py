@@ -5,7 +5,6 @@ Status changes should be done for CMO servers only. FMO servers are managed in E
 """
 import argparse
 import logging
-import pandas
 from lib import my_env
 from lib import murcsstore
 from lib import murcsrest
@@ -31,7 +30,6 @@ murcs_rec = mdb.get_server(host)
 serverId = murcs_rec["serverId"]
 serverprops = {}
 if murcs_rec:
-    print(murcs_rec)
     # Update existing server record to guarantee that all murcs fields are in serverprops.
     for k in murcs_rec:
         if k not in ignore:
@@ -39,9 +37,13 @@ if murcs_rec:
                 serverprops[k] = murcs_rec[k]
     # Set Life Cycle State
     serverprops["lifeCycleState"] = args.lifecycle
-    serverprops["parentServer"] = mdb.get_parentserver_dict(murcs_rec["parentServerId"])
-    if murcs_rec["siteId"]:
+    serverprops["clientId"] = cfg["Murcs"]["clientId"]
+    if murcs_rec["parentServerId"]:
+        serverprops["parentServer"] = mdb.get_parentserver_dict(murcs_rec["parentServerId"])
+    try:
         serverprops["site"] = mdb.get_site_dict(murcs_rec["siteId"])
-    r.add_server(host, serverprops)
+    except KeyError:
+        pass
+    r.add_server(serverId, serverprops)
 else:
     logging.error("Server {host} not found in MURCS".format(host=host))

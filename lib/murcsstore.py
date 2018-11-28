@@ -357,9 +357,7 @@ class Murcs:
     def get_solComp(self, solInstId):
         """
         This method will return the solComp record linked with the solInstId.
-
         :param solInstId: solInstId for which record is required.
-
         :return: solInstId, or False if not found.
         """
         query = """
@@ -373,6 +371,28 @@ class Murcs:
         params = dict(
             solInstId=solInstId,
             client_id=self.client_id
+        )
+        self.cur.execute(query, params)
+        res = self.cur.fetchall()
+        if len(res) > 0:
+            return res[0]
+        else:
+            return False
+
+    def get_sol_comp_rec(self, sol_comp_id):
+        """
+        This method will return the all fields of the solComp record linked with the solInstId. This function can be
+        used to modify solComp attributes.
+        :param sol_comp_id: id of the solComp for which record is required. ID required since clientId will not be used.
+        :return: solComp record.
+        """
+        query = """
+            SELECT *
+            FROM solinst
+            WHERE id = %(sol_comp_id)s
+        """
+        params = dict(
+            sol_comp_id=sol_comp_id
         )
         self.cur.execute(query, params)
         res = self.cur.fetchall()

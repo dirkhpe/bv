@@ -9,7 +9,7 @@ from lib import my_env
 from lib import murcsrest, murcsstore
 
 dc_names = ["EMEA-DE-Frankfurt-eshelter-B"]
-ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "clientId", "siteId"]
+ignore = my_env.server_ignore
 
 if __name__ == "__main__":
     # Configure command line arguments

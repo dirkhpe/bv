@@ -4,11 +4,10 @@ not used at this time, or replaced by another server.
 """
 import argparse
 import logging
-import pandas
 from lib import my_env
 from lib import murcsrest, murcsstore
 
-ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "clientId", "service"]
+ignore = my_env.server_ignore
 
 if __name__ == "__main__":
     # Configure command line arguments
@@ -34,5 +33,9 @@ if __name__ == "__main__":
             if k not in ignore:
                 if len(server_rec[k]) > 0:
                     serverprops[k] = server_rec[k]
+    if server_rec["parentServerId"]:
+        serverprops["parentServer"] = mdb.get_parentserver_dict(server_rec["parentServerId"])
+    if server_rec["siteId"]:
+        serverprops["site"] = mdb.get_site_dict(server_rec["siteId"])
     r.add_server(server_rec["serverId"], serverprops)
     mdb.close()

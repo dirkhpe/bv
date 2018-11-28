@@ -15,7 +15,9 @@ from collections import namedtuple
 from datetime import datetime
 
 server_ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy",
-                 "clientId", "siteId", "version", "dataQuality"]
+                 "clientId", "siteId", "version", "dataQuality", "parentServerId"]
+solcomp_ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "version", "solId"]
+
 
 def init_env(projectname, filename):
     """

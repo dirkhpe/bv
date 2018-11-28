@@ -507,15 +507,10 @@ class MurcsRest:
     def add_solToSol(self, solToSolId, fromSolId, toSolId, payload):
         """
         This method will remove a solution to solution relation.
-
         :param solToSolId: ID of the solution to Solution Component
-
         :param fromSolId: ID of the Source Solution Component
-
         :param toSolId: ID of the Target Solution Component.
-
         :param payload: Payload for the PUT.
-
         :return:
         """
         data = json.dumps(payload)
@@ -1018,6 +1013,39 @@ class MurcsRest:
         if r.status_code == 200:
             msg = "Property {prop} has been deleted from solution {solId}".format(solId=solId, prop=propertyName)
             logging.info(msg)
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def update_solution_component(self, solcomp_rec):
+        """
+        This method will update a solution Component record.
+        :param solcomp_rec: Solution Component Record.
+        :return:
+        """
+        solId = solcomp_rec["solId"]
+        solInstId = solcomp_rec["solInstId"]
+        solution = dict(solutionId=solId)
+        payload = dict(
+            solutionInstanceId=solInstId,
+            solutionInstanceName=solcomp_rec["solInstName"],
+            solutionInstanceType=solcomp_rec["solInstType"],
+            solution=solution
+        )
+        solcomp_rec.update(payload)
+        for key in ["solInstId", "solInstName", "solInstType"]:
+            del solcomp_rec[key]
+        data = json.dumps(solcomp_rec)
+        logging.debug("Payload: {p}".format(p=data))
+        url = self.url_base + 'solutions/{solId}/solutionInstances/{solInstId}'\
+            .format(solId=solId, solInstId=solInstId)
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("solution Instance {solInstId} is modified for solution {solId}!".format(solId=solId,
+                                                                                                 solInstId=solInstId))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
