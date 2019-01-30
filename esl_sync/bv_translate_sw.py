@@ -15,7 +15,6 @@ def handle_tx_file(sheet):
     This function will if all required SW or OS entries are loaded in MURCS. If not, a SW entry will be created.
 
     :param sheet: Name of the sheet to handle.
-
     :return:
     """
     df = pandas.read_excel(filename, sheet_name=sheet)
@@ -41,6 +40,7 @@ def handle_tx_file(sheet):
             r.add_soft(softId, payload)
             softId_arr.append(softId)
     my_loop.end_loop()
+
 
 if __name__ == "__main__":
     # Configure command line arguments

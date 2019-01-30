@@ -17,9 +17,7 @@ class NeoStore:
         Method to instantiate the class in an object for the neostore module.
 
         :param config object, to get connection parameters.
-
         :param refresh: If Yes, then database will be made empty.
-
         :return: Object to handle neostore commands.
         """
         logging.debug("Initializing Neostore object")
@@ -57,9 +55,7 @@ class NeoStore:
         Function to create node. The function will return the node object.
 
         :param labels: Labels for the node
-
         :param props: Value dictionary with values for the node.
-
         :return: node object
         """
         logging.debug("Trying to create node with params {p}".format(p=props))
@@ -72,11 +68,8 @@ class NeoStore:
         Function to create relationship between nodes. If the relation exists already, it will not be created again.
 
         :param from_node:
-
         :param rel:
-
         :param to_node:
-
         :return:
         """
         rel = Relationship(from_node, rel, to_node)
@@ -99,9 +92,7 @@ class NeoStore:
         This method will select all nodes that have labels and properties
 
         :param labels:
-
         :param props:
-
         :return: list of nodes that fulfill the criteria, or False if no nodes are found.
         """
         nodes = self.selector.select(*labels, **props)
@@ -117,15 +108,10 @@ class NeoStore:
         This function will link the component to a date
 
         :param component: Node of the component to link to
-
         :param rel: Type of relation to link to
-
         :param y: Year, in int
-
         :param m: Month, in int
-
         :param d: Day, in int
-
         :return:
         """
         date_node = self.calendar.date(y, m, d).day
@@ -137,7 +123,6 @@ class NeoStore:
         This function will run a query and return the result as a cursor.
 
         :param query:
-
         :return: cursor containing the query result
         """
         return self.graph.run(query)
@@ -147,8 +132,6 @@ class NeoStore:
         This function will run a query and return the result as a datafram.
 
         :param query:
-
         :return: Dataframe as result
         """
         return DataFrame(self.graph.data(query))
-

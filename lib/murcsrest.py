@@ -40,9 +40,7 @@ class MurcsRest:
         This method will load a server in Murcs.
 
         :param serverId: serverId to load
-
         :param payload: Dictionary with properties to load
-
         :return:
         """
         data = json.dumps(payload)
@@ -64,11 +62,8 @@ class MurcsRest:
         This method will add a Person to a server in a role.
 
         :param serverId: ID of the server
-
         :param personId: email of to the Person.
-
         :param role: Role of the person
-
         :return:
         """
         path = "servers/{serverId}/contactPersons/{personId}/{role}".format(serverId=serverId, personId=personId,
@@ -90,9 +85,7 @@ class MurcsRest:
         This method will add a property to a server.
 
         :param serverId:
-
         :param payload: Dictionary with propertyName, propertyValue and description
-
         :return:
         """
         propname = payload["propertyName"]
@@ -116,9 +109,7 @@ class MurcsRest:
         This method will load a server in Murcs.
 
         :param siteId: siteId to load
-
         :param payload: Dictionary with properties to load
-
         :return:
         """
         data = json.dumps(payload)
@@ -140,9 +131,7 @@ class MurcsRest:
         This method will load a solution in Murcs.
 
         :param solId: solId to load
-
         :param payload: Dictionary with properties to load
-
         :return:
         """
         data = json.dumps(payload)
@@ -164,7 +153,6 @@ class MurcsRest:
         This method launches the Rest call to get the solution information
 
         :param solId:
-
         :return:
         """
         url = self.url_base + 'solutions/{solId}'.format(solId=solId)
@@ -186,7 +174,6 @@ class MurcsRest:
         This method launches the Rest call to get wave information
 
         :param solId: Solution ID for which wave info is required.
-
         :return:
         """
         url = self.url_base + 'solutions/{solId}'.format(solId=solId)
@@ -208,9 +195,7 @@ class MurcsRest:
         This method will add a Person to the system.
 
         :param email: unique identifier for Person
-
         :param payload: Payload to be added to the Person.
-
         :return:
         """
         data = json.dumps(payload)
@@ -232,11 +217,8 @@ class MurcsRest:
         This method will add a Network Interface to a server.
 
         :param serverId: unique server Id
-
         :param ifaceId: Network Interface ID.
-
         :param payload: Payload to be added. serverId and ifaceId must be included in the payload.
-
         :return:
         """
         data = json.dumps(payload)
@@ -258,13 +240,9 @@ class MurcsRest:
         This method will add a Network Interface to a server.
 
         :param serverId: unique server Id
-
         :param ifaceId: Network Interface ID
-
         :param ipAddress: IP Address to be added.
-
         :param payload: Payload to be added.
-
         :return:
         """
         if not payload:
@@ -289,12 +267,10 @@ class MurcsRest:
 
     def add_soft(self, softId, payload):
         """
-        This method will add a Person to the system.
+        This method will add a Software to the system.
 
         :param softId: unique software Id
-
         :param payload: Payload to be added.
-
         :return:
         """
         data = json.dumps(payload)
@@ -316,7 +292,6 @@ class MurcsRest:
         This method will create a Software from a Solution.
 
         :param sol_rec: Dictionary with keys solId and solName
-
         :return:
         """
         softId = "{solId} software".format(solId=sol_rec["solId"])
@@ -351,13 +326,10 @@ class MurcsRest:
         In case this is a database with a known schema, instSubType will have the schema name.
 
         :param softId: ID Name for the Software
-
         :param serverId: ID Name for the Server
-
         :param params: dictionary with additional attributes. softInstId is mandatory for Type 'Application' Type and
         environment not Production. instSubType: (Optional) Schema of the instance, or environment for Application-type
         software instances. instType: Defaults to 'Application'.
-
         :return:
         """
         try:
@@ -398,9 +370,7 @@ class MurcsRest:
         This method will add a property to a software Instance.
 
         :param inst_rec: Software Instance record, containing instId, softId, serverID
-
         :param payload: Dictionary with propertyName, propertyValue and description
-
         :return:
         """
         instId = inst_rec["instId"]
@@ -428,9 +398,7 @@ class MurcsRest:
         This method will add a property to a solution component.
 
         :param solcomp_rec:
-
         :param payload: Dictionary with propertyName, propertyValue and description
-
         :return:
         """
         solId = solcomp_rec["solId"]
@@ -457,18 +425,12 @@ class MurcsRest:
         This method will add a solutionInstanceComponent as the final link between solution and server.
 
         :param solInstId:
-
         :param softInstId:
-
         :param solId:
-
         :param serverId:
-
         :param softId:
-
-        :param mode: CMO or FMO. If FMO, validFrom date will be set to '2300-01-01' and the connection will be
-        created for FMO. CMO is default
-
+        :param mode: CMO or FMO. If FMO, validFrom date will be set to '2300-01-01' and the connection will be created
+        for FMO. CMO is default
         :return:
         """
         server = dict(serverId=serverId)
@@ -507,6 +469,7 @@ class MurcsRest:
     def add_solToSol(self, solToSolId, fromSolId, toSolId, payload):
         """
         This method will remove a solution to solution relation.
+
         :param solToSolId: ID of the solution to Solution Component
         :param fromSolId: ID of the Source Solution Component
         :param toSolId: ID of the Target Solution Component.
@@ -534,9 +497,7 @@ class MurcsRest:
         There can be multiple solution components attached to a solution.
 
         :param sol_rec: Solution Record.
-
         :param env: Environment (Production, Development, Quality)
-
         :return:
         """
         solId = sol_rec["solId"]
@@ -574,7 +535,6 @@ class MurcsRest:
         Component need to be used. Default solution instance is in environment Production.
 
         :param sol_rec: Solution Record.
-
         :return:
         """
         solId = sol_rec["solId"]
@@ -608,11 +568,8 @@ class MurcsRest:
         This method will add a Person to a solution in a role.
 
         :param solId: ID of the solution
-
         :param personId: email of to the Person.
-
         :param role: Role of the person
-
         :return:
         """
         path = "solutions/{solId}/contactPersons/{personId}/{role}".format(solId=solId, personId=personId, role=role)
@@ -632,9 +589,7 @@ class MurcsRest:
         This method will add a property to a software Instance.
 
         :param inst_rec: Software Instance record, containing instId, softId, serverID
-
         :param propname: propertyName
-
         :return:
         """
         instId = inst_rec["instId"]
@@ -660,7 +615,6 @@ class MurcsRest:
         This method will remove a Person.
 
         :param email: ID (email) of the person to be removed
-
         :return:
         """
         path = "persons/{email}".format(email=email)
@@ -680,7 +634,6 @@ class MurcsRest:
         This method will remove a server in Murcs.
 
         :param serverId: serverId to remove
-
         :return:
         """
         path = "servers/{serverId}".format(serverId=serverId)
@@ -700,9 +653,7 @@ class MurcsRest:
         This method will delete a property from a server.
 
         :param serverId: Id of the server
-
         :param prop: property name of the server
-
         :return:
         """
         path = "servers/{serverId}/properties/{prop}".format(serverId=serverId, prop=prop)
@@ -723,9 +674,7 @@ class MurcsRest:
         This method will remove a Network Interface from a server.
 
         :param serverId: unique server Id
-
         :param ifaceId: Network Interface ID.
-
         :return:
         """
         path = "{serverId}/serverNetworkInterfaces/{ifaceId}".format(serverId=serverId, ifaceId=ifaceId)
@@ -745,11 +694,8 @@ class MurcsRest:
         This method will remove a Network Interface from a server.
 
         :param serverId: unique server Id
-
         :param ifaceId: netIfaceId where IP is connected to.
-
         :param ipAddress: IP Address to be removed.
-
         :return:
         """
         path = "{serverId}/serverNetworkInterfaces/{ifaceId}/serverNetworkInterfacesIpAddress/{ipAddress}"\
@@ -772,11 +718,8 @@ class MurcsRest:
         application.
 
         :param serverId:
-
         :param softId:
-
         :param softInstId:
-
         :return:
         """
         url = self.url_base + "softwareInstances/{serverId}/{softwareId}/{softwareInstanceId}"\
@@ -797,9 +740,7 @@ class MurcsRest:
         This method will remove a property from a software Instance.
 
         :param inst_rec: Software Instance record, containing instId, softId, serverID
-
         :param propname: propertyName
-
         :return:
         """
         instId = inst_rec["instId"]
@@ -824,13 +765,9 @@ class MurcsRest:
         This method will remove a contact in a role from a solution component.
 
         :param solId: ID of the solution.
-
         :param solInstId: ID of the solution component
-
         :param personId: email of the person
-
         :param role: role for the person
-
         :return:
         """
         path = "solutions/{solId}/solutionInstances/{solInstId}/contactPersons/{personId}/{role}"\
@@ -852,9 +789,7 @@ class MurcsRest:
         This method will remove a property from a solution component.
 
         :param solcomp_rec:
-
         :param propname: property to be removed
-
         :return:
         """
         solId = solcomp_rec["solId"]
@@ -878,15 +813,10 @@ class MurcsRest:
         This method will remove a solutionInstanceComponent as the final link between solution and server.
 
         :param solInstId: ID of the solution Component
-
         :param softInstId: ID of the software Instance
-
         :param solId: ID of the solution
-
         :param serverId: ID of the server
-
         :param softId: ID of the software
-
         :return:
         """
         # solutionInstanceId = solInst_rec["solInstId"]
@@ -927,11 +857,8 @@ class MurcsRest:
         This method will remove a solution to solution relation.
 
         :param solToSolId: ID of the solution to Solution Component
-
         :param fromSolId: ID of the Source Solution Component
-
         :param toSolId: ID of the Target Solution Component.
-
         :return:
         """
         url = self.url_base + 'solutionToSolution/{fromSolId}/{toSolId}/{solToSolId}'.format(fromSolId=fromSolId,
@@ -953,9 +880,7 @@ class MurcsRest:
         remove is executed.
 
         :param solId:
-
         :param solInstId:
-
         :return:
         """
         url = self.url_base + "solutions/{solId}/solutionInstances/{solInstId}".format(solId=solId, solInstId=solInstId)
@@ -976,11 +901,8 @@ class MurcsRest:
         This method will remove a Person from a solution in a role.
 
         :param solId: ID of the solution
-
         :param personId: email of to the Person.
-
         :param role: Role of the person
-
         :return:
         """
         path = "solutions/{solId}/contactPersons/{personId}/{role}".format(solId=solId, personId=personId, role=role)
@@ -1002,9 +924,7 @@ class MurcsRest:
         This method will remove a property attached to a solution
 
         :param solId:
-
         :param propertyName:
-
         :return:
         """
         url = self.url_base + "solutions/{solId}/properties/{prop}".format(solId=solId, prop=propertyName)
@@ -1022,6 +942,7 @@ class MurcsRest:
     def update_solution_component(self, solcomp_rec):
         """
         This method will update a solution Component record.
+
         :param solcomp_rec: Solution Component Record.
         :return:
         """
