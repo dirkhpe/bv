@@ -3,11 +3,8 @@ This class consolidates functions related to the neo4J datastore.
 """
 
 import logging
-import sys
-from pandas import DataFrame
-from py2neo import Graph, Node, Relationship, NodeSelector
-from py2neo.ext.calendar import GregorianCalendar
-from py2neo.database import DBMS
+from py2neo import Database, Graph, Node, Relationship, NodeMatcher, RelationshipMatch
+import uuid
 
 
 class NeoStore:
@@ -25,8 +22,7 @@ class NeoStore:
         self.graph = self._connect2db()
         if refresh == 'Yes':
             self._delete_all()
-        self.calendar = GregorianCalendar(self.graph)
-        self.selector = NodeSelector(self.graph)
+        self.nodematcher = NodeMatcher(self.graph)
         return
 
     def _connect2db(self):
@@ -40,15 +36,62 @@ class NeoStore:
             'user': self.config['Graph']['username'],
             'password': self.config['Graph']['password'],
         }
+        # Check that Neo4J is running the expected Neo4J Store - to avoid accidents...
+        connected_db = Database(**neo4j_config)
+        dbname = connected_db.config["dbms.active_database"]
+        if dbname != self.config['Graph']['neo_db']:
+            msg = "Connected to Neo4J database {d}, but expected to be connected to {n}"\
+                .format(d=dbname, n=self.config['Main']['neo_db'])
+            logging.fatal(msg)
+            raise SystemExit(msg)
         # Connect to Graph
         graph = Graph(**neo4j_config)
         # Check that we are connected to the expected Neo4J Store - to avoid accidents...
-        dbname = DBMS().database_name
-        if dbname != self.config['Graph']['neo_db']:
-            logging.fatal("Connected to Neo4J database {d}, but expected to be connected to {n}"
-                          .format(d=dbname, n=self.config['Main']['neo_db']))
-            sys.exit(1)
         return graph
+
+    def get_endnode(self, start_node=None, rel_type=None):
+        """
+        This method will calculate the end node from a start Node and a relation type. If relation type is not specified
+        then any relation type will do.
+        The purpose of the function is to find a single end node. If there are multiple end nodes, then a random one
+        is returned and an error message will be displayed.
+
+        :param start_node: Start node.
+        :param rel_type: Relation type
+        :return: End Node, or False.
+        """
+        if not isinstance(start_node, Node):
+            logging.error("Attribute not type Node (instead type {t})".format(t=type(start_node)))
+            return False
+        rels = RelationshipMatch(self.graph, (start_node, None), r_type=rel_type)
+        if rels.__len__() == 0:
+            logging.warning("No end node found for start node ID: {nid} and relation: {rel}"
+                            .format(nid=start_node["nid"], rel=rel_type))
+            return False
+        elif rels.__len__() > 1:
+            logging.warning("More than one end node found for start node ID {nid} and relation {rel},"
+                            " returning first".format(nid=start_node["nid"], rel=rel_type))
+        return rels.first().end_node
+
+    def get_endnodes(self, start_node=None, rel_type=None):
+        """
+        This method will calculate all end nodes from a start Node and a relation type. If relation type is not
+        specified then any relation type will do.
+        The purpose of the function is to find all end nodes.
+
+        :param start_node: Start node.
+        :param rel_type: Relation type
+        :return: List with End Nodes.
+        """
+        if not isinstance(start_node, Node):
+            logging.error("Attribute not type Node (instead type {t})".format(t=type(start_node)))
+            return False
+        node_list = [rel.end_node
+                     for rel in RelationshipMatch(self.graph, (start_node, None), r_type=rel_type)]
+        # Convert to set to remove duplicate end nodes
+        node_set = set(node_list)
+        # Then return the result as a list
+        return list(node_set)
 
     def create_node(self, *labels, **props):
         """
@@ -59,6 +102,7 @@ class NeoStore:
         :return: node object
         """
         logging.debug("Trying to create node with params {p}".format(p=props))
+        props['nid'] = str(uuid.uuid4())
         component = Node(*labels, **props)
         self.graph.create(component)
         return component
@@ -95,7 +139,7 @@ class NeoStore:
         :param props:
         :return: list of nodes that fulfill the criteria, or False if no nodes are found.
         """
-        nodes = self.selector.select(*labels, **props)
+        nodes = self.nodematcher.match(*labels, **props)
         nodelist = list(nodes)
         if len(nodelist) == 0:
             # No nodes found that fulfil the criteria
@@ -103,35 +147,31 @@ class NeoStore:
         else:
             return nodelist
 
-    def link2date(self, component, rel, y, m, d):
+    def get_query(self, query, **kwargs):
         """
-        This function will link the component to a date
+        This method accepts a Cypher query and returns the result as a cursor.
 
-        :param component: Node of the component to link to
-        :param rel: Type of relation to link to
-        :param y: Year, in int
-        :param m: Month, in int
-        :param d: Day, in int
-        :return:
+        :param query: Cypher Query to run
+        :param kwargs: Optional Keyword parameters for the query.
+        :return: Result of the Cypher Query as a cursor.
         """
-        date_node = self.calendar.date(y, m, d).day
-        self.create_relation(component, rel, date_node)
-        return
+        return self.graph.run(query, **kwargs)
 
-    def get_query(self, query):
+    def get_query_data(self, query, **kwargs):
         """
-        This function will run a query and return the result as a cursor.
+        This method accepts a Cypher query and returns the result as a list of dictionaries.
 
-        :param query:
-        :return: cursor containing the query result
+        :param query: Cypher Query to run
+        :param kwargs: Optional Keyword parameters for the query.
+        :return: Result of the Cypher Query as a list of dictionaries.
         """
-        return self.graph.run(query)
+        return self.get_query(query, **kwargs).data()
 
-    def get_query_as_df(self, query):
+    def get_query_df(self, query, **kwargs):
         """
-        This function will run a query and return the result as a datafram.
-
-        :param query:
-        :return: Dataframe as result
+        This method accepts a Cypher query and returns the result as a pandas dataframe.
+        :param query: Cypher Query to run
+        :param kwargs: Optional Keyword parameters for the query.
+        :return: Result of the Cypher Query as a pandas dataframe.
         """
-        return DataFrame(self.graph.data(query))
+        return self.get_query(query, **kwargs).to_data_frame()

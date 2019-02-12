@@ -20,7 +20,7 @@ query = """
         (inst)<-[:serverInst]-(server:Server)
     RETURN wave.name as wave, sol.solName as solution, inst.instSubType as Type, server.hostName as host
 """
-res = ns.get_query_as_df(query)
+res = ns.get_query_df(query)
 ofp = cfg["MurcsDump"]["dump_dir"]
 of = os.path.join(ofp, "rb.xlsx")
 res.to_excel(of)
