@@ -50,7 +50,7 @@ if __name__ == "__main__":
     server_id = server_rec["id"]
     soft_id = soft_rec["id"]
     if not mdb.get_softInst(soft_id, server_id):
-        r.add_softInst(softId, serverId)
+        r.add_softInst_calc(softId, serverId)
         mdb.recycle()
     softInst_rec = mdb.get_softInst(soft_id, server_id)
 

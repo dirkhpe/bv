@@ -6,11 +6,108 @@ import logging
 import os
 import pymysql
 import sqlite3
-from sqlalchemy import Column, Integer, Text, create_engine, ForeignKey, UniqueConstraint, VARCHAR
+from lib import my_env
+from sqlalchemy import Column, Integer, Text, create_engine, ForeignKey, VARCHAR
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
 Base = declarative_base()
+
+
+class Server(Base):
+    """
+    Table containing the Server Information.
+    """
+    __tablename__ = "server"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    availability = Column(Text)
+    backupInformation = Column(Text)
+    brand = Column(Text)
+    category = Column(Text)
+    classification = Column(Text)
+    clockSpeedGhz = Column(Integer)
+    clusterArchitecture = Column(Text)
+    clusterName = Column(Text)
+    clusterTechnologie = Column(Text)
+    cmdbSystemId = Column(Text)
+    contact = Column(Text)
+    contractServiceLevel = Column(Text)
+    coreCount = Column(Integer)
+    coverage = Column(Text)
+    cpuCount = Column(Integer)
+    cpuType = Column(Text)
+    currentApproach = Column(Text)
+    disasterRecoveryServer = Column(Text)
+    domain = Column(Text)
+    fqdn = Column(Text)
+    futureApproach = Column(Text)
+    hostName = Column(Text)
+    hwModel = Column(Text)
+    hyperThreading = Column(Text)
+    inScope = Column(Text)
+    insideDMZ = Column(Text)
+    installationDate = Column(Text)
+    lifeCycleState = Column(Text)
+    macAddress = Column(Text)
+    managementRegion = Column(Text)
+    memorySizeInByte = Column(Integer)
+    murcsScope = Column(Text)
+    operatingSystem = Column(Text)
+    operatingSystemVersion = Column(Text)
+    parentServer = Column(Text)
+    primaryIPAddress = Column(Text)
+    ragState = Column(Text)
+    securityClass = Column(Text)
+    serialNo = Column(Text)
+    serverId = Column(Text)
+    serverType = Column(Text)
+    serverUsage = Column(Text)
+    serverUsageDetailed = Column(Text)
+    service = Column(Text)
+    servicePack = Column(Text)
+    siteId = Column(Text)
+    sla = Column(Text)
+    status = Column(Text)
+    subCategory = Column(Text)
+    subtype = Column(Text)
+    supportGroup = Column(Text)
+    systemLocation = Column(Text)
+    technicalOwner = Column(Text)
+    technicalOwnerBackup = Column(Text)
+    timeZone = Column(Text)
+    usageContact = Column(Text)
+    vCenter = Column(Text)
+    virtualizationRole = Column(Text)
+    virtualizationTechnologie = Column(Text)
+    virtualizationUUID = Column(Text)
+
+
+class Site(Base):
+    """
+    Table containing the Site information
+    """
+    __tablename__ = "site"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    country = Column(Text)
+    dataCenterName = Column(Text)
+    description = Column(Text)
+    eslId = Column(Integer)
+    siteId = Column(Text)
+    provider = Column(Text)
+    region = Column(Text)
+    town = Column(Text)
 
 
 class Software(Base):
@@ -21,43 +118,56 @@ class Software(Base):
     """
     __tablename__ = "software"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(Text, nullable=False)
-    label = Column(Text, nullable=False)
-    version = Column(Text, nullable=True)
-    vendor = Column(Text, nullable=True)
-    category = Column(Text, nullable=False)
-    sw_version = UniqueConstraint("name", "version")
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    comment = Column(Text)
+    description = Column(Text)
+    inScope = Column(Text)
+    installationPackageAvailable = Column(Text)
+    longDescription = Column(Text)
+    ragState = Column(Text)
+    softwareId = Column(Text)
+    softwareName = Column(Text)
+    softwareSubType = Column(Text)
+    softwareType = Column(Text)
+    softwareVendor = Column(Text)
+    softwareVersion = Column(Text)
+    state = Column(Text)
+    status = Column(Text)
+    supportedVersion = Column(Text)
+    thirdPartySupportNeeded = Column(Text)
     instances = relationship("Instance")
 
 
-class Instance(Base):
+class SoftwareInstance(Base):
     """
     Table containing the software instances. This is an installation of a Software product (object) on a server. Note
     that a software product can be installed multiple times on a server.
     """
-    __tablename__ = "instance"
+    __tablename__ = "softinst"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(Text, nullable=False)
-    version = Column(Text, nullable=True)
-    ip = Column(Text, nullable=True)
-    installed_path = Column(Text, nullable=True)
-    port = Column(Text, nullable=True)
-    software_id = Column(Integer, ForeignKey("software.id"), nullable=False)
-    server_id = Column(Integer, ForeignKey("server.id"), nullable=False)
-    processes = relationship("Process")
-
-
-class Server(Base):
-    """
-    Table containing the Servers.
-    """
-    __tablename__ = "server"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(VARCHAR(255), nullable=False, unique=True)
-    os = Column(Text, nullable=True)
-    instances = relationship("Instance")
-    # comm_from = relationship("ServerToServer", back_populates="from_server")
-    # comm_to = relationship("ServerToServer", back_populates="to_server")
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    backup = Column(Text)
+    comment = Column(Text)
+    description = Column(Text)
+    instanceSubType = Column(Text)
+    language = Column(Text)
+    patchLevel = Column(Text)
+    serverId = Column(Text)
+    softwareId = Column(Text)
+    softwareInstanceId = Column(Text)
+    softwareInstanceType = Column(Text)
+    validFrom = Column(Text)
+    validTo = Column(Text)
 
 
 class Solution(Base):
@@ -65,79 +175,38 @@ class Solution(Base):
     Table containing solution information.
     """
     __tablename__ = "solution"
-    solId = Column(VARCHAR(255), primary_key=True)
-    name = Column(Text, nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    applicationDetailTreatment = Column(Text)
+    applicationTreatment = Column(Text)
+    architecture = Column(Text)
+    assessmentComplete = Column(Text)
+    avgUserCount = Column(Text)
+    classification = Column(Text)
     comment = Column(Text)
     complexity = Column(Text)
-    inScope = Column(Text)
-    origin = Column(Text)
-    customerBusinessUnit = Column(Text)
     customerBusinessDivision = Column(Text)
-    supportBusinessUnit = Column(Text)
-    supportBusinessDivision = Column(Text)
+    customerBusinessUnit = Column(Text)
+    description = Column(Text)
+    externalSupportNeeded = Column(Text)
+    inScope = Column(Text)
     longDescription = Column(Text)
-    description = Column(Text)
-    applicationTreatment = Column(Text)
-    classification = Column(Text)
-
-
-class SolutionToSolution(Base):
-    """
-    Table containing solution to solution information.
-    """
-    __tablename__ = "solutionToSolution"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    fromSolId = Column(VARCHAR(255), ForeignKey("solution.solId"), nullable=False)
-    fromSol = relationship("Solution", foreign_keys=[fromSolId])
-    fromSolName = Column(Text, nullable=False)
-    toSolId = Column(VARCHAR(255), ForeignKey("solution.solId"), nullable=False, )
-    toSol = relationship("Solution", foreign_keys=[toSolId])
-    toSolName = Column(Text, nullable=False)
-    conType = Column(Text)
-    conSubType = Column(Text)
-    conDirection = Column(Text)
-    middlewareDependency = Column(Text)
-    comment = Column(Text)
-    description = Column(Text)
-
-
-class Process(Base):
-    """
-    Table containing the process information. An instance must have at least one process, but can have multiple
-    different processes.
-    """
-    __tablename__ = "process"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(Text, nullable=False)
-    commandline = Column(Text, nullable=True)
-    parameters = Column(Text, nullable=True)
-    path = Column(Text, nullable=True)
-    instance_id = Column(Integer, ForeignKey("instance.id"), nullable=False)
-    listeners = relationship("Listener")
-
-
-class Listener(Base):
-    """
-    Table containing the listener information.
-    """
-    __tablename__ = "listener"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(Text, nullable=False)
-    process_id = Column(Integer, ForeignKey("process.id"), nullable=False)
-
-
-class ServerToServer(Base):
-    """
-    Table containing the server-to-server communication information as discovered in Universal Discovery.
-    """
-    __tablename__ = "serverToServer"
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    from_server_id = Column(Integer, ForeignKey("server.id"), nullable=False)
-    from_server = relationship("Server", foreign_keys=[from_server_id])
-    to_server_id = Column(Integer, ForeignKey("server.id"), nullable=False)
-    to_server = relationship("Server", foreign_keys=[to_server_id])
-    commType = Column(Text, nullable=False)
-    port = Column(Integer)
+    origin = Column(Text)
+    ragScore = Column(Text)
+    ragState = Column(Text)
+    sla = Column(Text)
+    solutionId = Column(Text)
+    solutionName = Column(Text)
+    state = Column(Text)
+    status = Column(Text)
+    supportBusinessDivision = Column(Text)
+    supportBusinessUnit = Column(Text)
+    watchSolution = Column(Text)
 
 
 class sqliteUtils:
@@ -163,7 +232,7 @@ class sqliteUtils:
         """
         if os.path.isfile(self.db):
             db_conn = sqlite3.connect(self.db)
-            # db_conn.row_factory = sqlite3.Row
+            db_conn.row_factory = sqlite3.Row
             logging.debug("Datastore object and cursor are created")
             return db_conn, db_conn.cursor()
         else:
@@ -174,9 +243,7 @@ class sqliteUtils:
         This method will create a table where the fields are the row list.
 
         :param tablename: Name of the table
-
         :param row: Comma separated list with field names. First field must be Node.
-
         :return: Length of the row.
         """
         query = "DROP TABLE IF EXISTS {tn}".format(tn=tablename)
@@ -189,14 +256,23 @@ class sqliteUtils:
         logging.info("Table {tn} is built".format(tn=tablename))
         return len(row)
 
+    def get_query(self, query):
+        """
+        This method will get a query and return the result of the query.
+
+        :param query:
+        :return:
+        """
+        self.cur.execute(query)
+        res = self.cur.fetchall()
+        return res
+
     def insert_row(self, tablename, rowdict):
         """
         This method will insert a dictionary row into a table.
 
         :param tablename: Table Name to insert data into
-
         :param rowdict: Row Dictionary
-
         :return:
         """
         columns = ", ".join("`" + k + "`" for k in rowdict.keys())
@@ -205,6 +281,28 @@ class sqliteUtils:
         values = tuple(rowdict[key] for key in rowdict.keys())
         logging.debug("Insert query: {q}".format(q=query))
         self.dbConn.execute(query, values)
+        self.dbConn.commit()
+        return
+
+    def insert_rows(self, tablename, rowdict):
+        """
+        This method will insert a list of dictionary rows into a table.
+
+        :param tablename: Table Name to insert data into
+        :param rowdict: List of Dictionary Rows
+        :return:
+        """
+        columns = ", ".join("`" + k + "`" for k in rowdict[0].keys())
+        values_template = ", ".join(["?"] * len(rowdict[0].keys()))
+        query = "insert into {tn} ({cols}) values ({vt})".format(tn=tablename, cols=columns, vt=values_template)
+        logging.debug("Insert query: {q}".format(q=query))
+        cnt = my_env.LoopInfo(tablename, 50)
+        for line in rowdict:
+            cnt.info_loop()
+            logging.debug(line)
+            values = tuple(line[key] for key in line.keys())
+            self.dbConn.execute(query, values)
+        cnt.end_loop()
         self.dbConn.commit()
         return
 
@@ -246,6 +344,7 @@ class mysqlUtils:
     def rebuild(self):
         """
         This function will drop and recreate the database. Then it will call SQLAlchemy to recreate the tables.
+
         :return:
         """
         db = self.msp["db"]
@@ -269,9 +368,7 @@ def init_session(db, echo=False):
     This function configures the connection to the database and returns the session object.
 
     :param db: Name of the sqlite3 database.
-
     :param echo: True / False, depending if echo is required. Default: False
-
     :return: Tuple consisting of session object and engine object.
     """
     conn_string = "sqlite:///{db}".format(db=db)

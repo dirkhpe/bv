@@ -56,7 +56,7 @@ if __name__ == "__main__":
             softInstId=softInstId,
             instSubType=environment
         )
-        r.add_softInst(softId, serverId, **params)
+        r.add_softInst_calc(softId, serverId, **params)
         mdb.recycle()
     softInst_rec = mdb.get_softInst(soft_id, server_id, softInstId)
     # Create Solution Instance Component by linking softInst to SolInst

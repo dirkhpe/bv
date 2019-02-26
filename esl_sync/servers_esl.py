@@ -127,13 +127,13 @@ for row in df.iterrows():
                 params = dict(
                     instType='OperatingSystem'
                 )
-                r.add_softInst(softId, host, **params)
+                r.add_softInst_calc(softId, host, **params)
             elif os_id != softId:
                 logging.info("Server {h} new OS {s} (from {o})".format(h=host, s=softId, o=os_id))
                 params = dict(
                     instType='OperatingSystem'
                 )
-                r.add_softInst(softId, host, **params)
+                r.add_softInst_calc(softId, host, **params)
 my_loop.end_loop()
 
 # Now find servers in MURCS that are not in ESL.

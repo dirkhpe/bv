@@ -49,7 +49,6 @@ class Murcs:
         This method will get a query and return the result of the query.
 
         :param query:
-
         :return:
         """
         self.cur.execute(query)

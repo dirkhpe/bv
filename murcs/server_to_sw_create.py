@@ -43,5 +43,5 @@ if __name__ == "__main__":
     )
     if args.instance:
         params["instSubType"] = args.instance
-    r.add_softInst(args.softId, serverId, **params)
+    r.add_softInst_calc(args.softId, serverId, **params)
     mdb.close()

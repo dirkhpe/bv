@@ -1,5 +1,6 @@
 """
 This script will analyze the file running_software from universal discovery.
+
 """
 
 import csv
@@ -46,7 +47,7 @@ def handle_server(**params):
 def handle_instance(**params):
     # This needs to be a new / separate instance.
     # It will be different from any other instance, but we are not sure which columns are different.
-    instance = Instance(
+    instance = SoftwareInstance(
         name=params["name"],
         version=params["version"],
         ip=params["ip"],

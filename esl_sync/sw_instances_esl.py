@@ -98,7 +98,7 @@ if __name__ == "__main__":
                                 props["instanceSubType"] = xl["Instance Name"]
                             if pandas.notnull(xl["Instance Status"]):
                                 props["description"] = xl["Instance Status"]
-                            r.add_softInst(softId, serverId, **props)
+                            r.add_softInst_calc(softId, serverId, **props)
     my_loop.end_loop()
 
     # Now remove entries in MURCS that are no longer in ESL

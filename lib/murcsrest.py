@@ -106,7 +106,7 @@ class MurcsRest:
 
     def add_site(self, siteId, payload):
         """
-        This method will load a server in Murcs.
+        This method will load a site in Murcs.
 
         :param siteId: siteId to load
         :param payload: Dictionary with properties to load
@@ -147,6 +147,67 @@ class MurcsRest:
             logging.fatal(r.content)
             r.raise_for_status()
         return
+
+    def get_data(self, objtype, start=0, limit=100, reslist=None):
+        """
+        This method launches the Rest call to get the murcs data for a specific object type (site, servers, ...)
+
+        :param objtype: Object type for which Murcs information is collected.
+        :param start: Offset of the return set, default 0
+        :param limit: Number of lines in the return set, default 100
+        :param reslist:
+        :return: Murcs information as a parsed json string.
+        """
+        logging.debug("Start: {start}, limit: {limit}".format(start=start, limit=limit))
+        url = self.url_base + objtype
+        headers = {
+            'Accept': 'application/json'
+        }
+        payload = dict(
+            start=start,
+            limit=limit
+        )
+        r = requests.get(url, headers=headers, auth=(self.user, self.passwd), params=payload)
+        if r.status_code == 200:
+            res = r.json()
+            reslist += res["items"]
+            totalResults = res["totalResults"]
+            nextStart = start + limit
+            if nextStart < totalResults:
+                self.get_data(objtype, nextStart, limit, reslist)
+            else:
+                return
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+            return
+
+    def get_softinst_from_server(self, serverId):
+        """
+        This method launches the Rest call to get the software Instances for a server. Limit is set to 100. No server
+        should have more than 100 server instances.
+
+        :param serverId: Server Id for which the software Instances are required.
+        :return: Murcs information as a parsed json string.
+        """
+        limit = 100
+        url = self.url_base + 'servers/{serverId}/softwareInstances'.format(serverId=serverId)
+        headers = {
+            'Accept': 'application/json'
+        }
+        payload = dict(
+            limit=limit
+        )
+        r = requests.get(url, headers=headers, auth=(self.user, self.passwd), params=payload)
+        if r.status_code == 200:
+            res = r.json()
+            return res
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+            return
 
     def get_sol(self, solId):
         """
@@ -317,9 +378,32 @@ class MurcsRest:
             r.raise_for_status()
         return
 
-    def add_softInst(self, softId, serverId, **params):
+    def add_softInst(self, softInstId, payload):
         """
-        This method will link a Software from a solution to a server.
+        This method will add a Software Instance to the system. For linking server with software, check function
+        add_softInstCalc.
+
+        :param softInstId: unique software Instance Id
+        :param payload: Payload to be added.
+        :return:
+        """
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "softwareInstances/{softInstId}".format(softInstId=softInstId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Load softwareInstance {softInstId}!".format(softInstId=softInstId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def add_softInst_calc(self, softId, serverId, **params):
+        """
+        This method will link a Software (from a solution) to a server by calculating parameters.
         By default the softInstId is "softId serverId". In case this is softInstance for Application, then
         environment will be added if it is other than 'Production'. Current environments are Production, Development
         and Quality. Environment is also in instSubType then.
@@ -966,7 +1050,7 @@ class MurcsRest:
         r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
             logging.info("solution Instance {solInstId} is modified for solution {solId}!".format(solId=solId,
-                                                                                                 solInstId=solInstId))
+                                                                                                  solInstId=solInstId))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)

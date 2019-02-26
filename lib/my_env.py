@@ -17,7 +17,23 @@ from datetime import datetime
 server_ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy",
                  "clientId", "siteId", "version", "dataQuality", "parentServerId"]
 solcomp_ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "version", "solId"]
-
+"""
+prop2dict translates attribute to dictionary item in payload. Attribute is key. Name of dictionary item is first item in
+tuple, name of the key is second item in dictionary key. 
+"""
+excludedprops = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "clientId", "version", "dataQuality",
+                 "ragState"]
+srv_prop2dict = dict(
+    siteId=("site", "siteId"),
+    parentServer=("parentServer", "serverId")
+)
+softInst_prop2dict = dict(
+    serverId=("server", "serverId"),
+    softwareId=("software", "softwareId")
+)
+fixedprops = dict(
+    murcsScope="Full"
+)
 
 def init_env(projectname, filename):
     """

@@ -34,5 +34,5 @@ if __name__ == "__main__":
         for k in xl:
             if pandas.notnull(xl[k]):
                 params[k] = xl[k]
-        r.add_softInst(softId, serverId, **params)
+        r.add_softInst_calc(softId, serverId, **params)
     my_loop.end_loop()

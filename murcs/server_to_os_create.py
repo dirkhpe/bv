@@ -40,5 +40,5 @@ if __name__ == "__main__":
     )
     if args.description:
         params["description"] = args.description
-    r.add_softInst(args.softId, server_rec["serverId"], **params)
+    r.add_softInst_calc(args.softId, server_rec["serverId"], **params)
     mdb.close()

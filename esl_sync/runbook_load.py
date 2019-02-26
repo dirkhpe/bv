@@ -174,7 +174,7 @@ if __name__ == "__main__":
             params = dict(
                 instType='OperatingSystem'
             )
-            r.add_softInst(softId, serverId, **params)
+            r.add_softInst_calc(softId, serverId, **params)
 
         # Add Database
         db = xl["Database Version"]
@@ -188,7 +188,7 @@ if __name__ == "__main__":
                     params = dict(
                         instType='Database'
                     )
-                    r.add_softInst(softId, serverId, **params)
+                    r.add_softInst_calc(softId, serverId, **params)
 
         # Add Phase as attribute
         phase = xl["Phase"]
