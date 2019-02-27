@@ -31,18 +31,20 @@ softInst_prop2dict = dict(
     serverId=("server", "serverId"),
     softwareId=("software", "softwareId")
 )
+solInst_prop2dict = dict(
+    solutionId=("solution", "solutionId")
+)
 fixedprops = dict(
     murcsScope="Full"
 )
+
 
 def init_env(projectname, filename):
     """
     This function will initialize the environment: Find and return handle to config file and set-up logging.
 
     :param projectname: Name that will be used to find ini file in properties subdirectory.
-
     :param filename: Filename (__file__) of the calling script (for logfile).
-
     :return: config handle
     """
     projectname = projectname
@@ -58,7 +60,6 @@ def get_modulename(scriptname):
     Modulename is required for logfile and for properties file.
 
     :param scriptname: Name of the script for which modulename is required. Use __file__.
-
     :return: Module Filename from the calling script.
     """
     # Extract calling application name
@@ -76,9 +77,7 @@ def init_loghandler(config, modulename):
 
     :param config: Reference to the configuration ini file. Directory for logfile should be
     in section Main entry logdir.
-
     :param modulename: The name of the module. Each module will create it's own logfile.
-
     :return: Log Handler
     """
     logdir = config['Main']['logdir']
@@ -123,7 +122,6 @@ def env2abbr(env):
     This method will return the environment abbreviation.
 
     :param env: Production - Development - Quality - Other
-
     :return: prod - dev - qua - oth
     """
     env2abbr_dict = dict(
@@ -181,7 +179,6 @@ def fmo_serverId(fqdn):
     FMO serverId has 'VPC.' in front of servername.
 
     :param fqdn: or servername.
-
     :return: 'VPC.' + servername.lower()
     """
     fqdn_arr = fqdn.strip().lower().split(".")
@@ -193,9 +190,7 @@ def get_named_row(nr_name, col_hrd):
     This method will create a named tuple row.
 
     :param nr_name: Name of the Named Row. Worksheet name in many cases. This will be helpful in case of errors.
-
     :param col_hrd: Where the column information is stored.
-
     :return: namedtuple class with name "named_row"
     """
     # Get column names
@@ -211,9 +206,7 @@ def get_solInstId(solId, env):
     Development or Quality.
 
     :param solId:
-
     :param env: Production, Development, Quality or Compression
-
     :return:
     """
     env_abbr = env2abbr(env)
@@ -233,11 +226,8 @@ def run_script(path, script_name, *args):
     This function will run a python script with arguments.
 
     :param path: Full path to the script.
-
     :param script_name: Name of the script. Include .py if this is the script extension.
-
     :param args: List of script arguments.
-
     :return:
     """
     script_path = os.path.join(path, script_name)

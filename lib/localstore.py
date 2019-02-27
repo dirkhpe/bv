@@ -209,6 +209,63 @@ class Solution(Base):
     watchSolution = Column(Text)
 
 
+class SolutionInstance(Base):
+    """
+    Table containing solution Instance information.
+    """
+    __tablename__ = "solinst"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    availability = Column(Text)
+    avgUserCount = Column(Text)
+    businessCriticality = Column(Text)
+    comment = Column(Text)
+    coverage = Column(Text)
+    description = Column(Text)
+    environment = Column(Text)
+    impact = Column(Text)
+    maintenanceDowntimeWindow = Column(Text)
+    peakUserCount = Column(Text)
+    priority = Column(Text)
+    ragScore = Column(Text)
+    ragState = Column(Text)
+    returnToOperation = Column(Text)
+    scheduledReboot = Column(Text)
+    sla = Column(Text)
+    solutionId = Column(Text)
+    solutionInstanceId = Column(Text)
+    solutionInstanceName = Column(Text)
+    solutionInstanceType = Column(Text)
+    state = Column(Text)
+
+
+class SolutionInstanceComponent(Base):
+    """
+    Table containing solution Instance Component information.
+    """
+    __tablename__ = "solinstcomp"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    priority = Column(Text)
+    serverId = Column(Text)
+    softwareId = Column(Text)
+    softwareInstanceId = Column(Text)
+    solutionId = Column(Text)
+    solutionInstanceId = Column(Text)
+    validFrom = Column(Text)
+    validTo = Column(Text)
+
+
 class sqliteUtils:
     """
     This class consolidates a number of Database utilities for sqlite, such as rebuild of the database or rebuild of a
@@ -296,13 +353,13 @@ class sqliteUtils:
         values_template = ", ".join(["?"] * len(rowdict[0].keys()))
         query = "insert into {tn} ({cols}) values ({vt})".format(tn=tablename, cols=columns, vt=values_template)
         logging.debug("Insert query: {q}".format(q=query))
-        cnt = my_env.LoopInfo(tablename, 50)
+        # cnt = my_env.LoopInfo(tablename, 50)
         for line in rowdict:
-            cnt.info_loop()
+            # cnt.info_loop()
             logging.debug(line)
             values = tuple(line[key] for key in line.keys())
             self.dbConn.execute(query, values)
-        cnt.end_loop()
+        # cnt.end_loop()
         self.dbConn.commit()
         return
 

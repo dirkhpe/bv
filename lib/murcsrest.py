@@ -230,6 +230,66 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def get_solinst_from_solution(self, solId):
+        """
+        This method launches the Rest call to get the solution Instances for a solution. This needs to be done in two
+        steps. 1. Find the solutionInstance Ids attached to this solution. 2. Find the details for every solution
+        Instance Id.
+
+        :param solId: Solution Id for which the solution Instances are required.
+        :return: Murcs information as a parsed json string.
+        """
+        limit = 100
+        url = self.url_base + 'solutions/{solId}/solutionInstances'.format(solId=solId)
+        headers = {
+            'Accept': 'application/json'
+        }
+        payload = dict(
+            limit=limit
+        )
+        r = requests.get(url, headers=headers, auth=(self.user, self.passwd), params=payload)
+        if r.status_code == 200:
+            res = r.json()
+            solInstRecs = []
+            for rec in res:
+                solInstId = rec["key"]
+                solInstDict = self.get_solinst_details_from_solution(solId, solInstId)
+                if isinstance(solInstDict, dict):
+                    solInstRecs.append(solInstDict)
+            return solInstRecs
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+            return
+
+    def get_solinst_details_from_solution(self, solId, solInstId):
+        """
+        This method launches the Rest call to get the solution Instances details for a solution. This is the second step
+        after calling get_solinst_from_solution. In this step solution Instance Components are also collected.
+
+        :param solId: Solution Id for which the solution Instances are required.
+        :param solInstId: Solution Instance Id for which the details are required.
+        :return: Murcs information as a parsed json string.
+        """
+        limit = 100
+        url = self.url_base + 'solutions/{solId}/solutionInstances/{solInstId}'.format(solId=solId, solInstId=solInstId)
+        headers = {
+            'Accept': 'application/json'
+        }
+        payload = dict(
+            limit=limit
+        )
+        r = requests.get(url, headers=headers, auth=(self.user, self.passwd), params=payload)
+        if r.status_code == 200:
+            res = r.json()
+            return res
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+            return
+
     def get_wave(self, solId):
         """
         This method launches the Rest call to get wave information
@@ -544,6 +604,31 @@ class MurcsRest:
         r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
             logging.info("solution Instance Component {sIC} is created!".format(sIC=sIC))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def add_solInst(self, solId, solInstId, payload):
+        """
+        This method will add a Solution Instance to the system. Two other functions are available: add_solutionInstance
+        and add_solutionComponent. These functions will calculate the payload from a limited number of input.
+        It may be better to remove payload calculation from this library and keep only add_solInst.
+
+        :param solId: solution Id to link solution Instance to.
+        :param solInstId: unique solution Instance Id
+        :param payload: Payload to be added.
+        :return:
+        """
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "solutions/{solId}/solutionInstances/{solInstId}".format(solId=solId, solInstId=solInstId)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Load solution Instance {solInstId}!".format(solInstId=solInstId))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)

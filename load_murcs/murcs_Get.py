@@ -28,11 +28,37 @@ def handle_software(swdict):
         return None
 
 
+def handle_solution(soldict):
+    if isinstance(soldict, dict):
+        return str(soldict["solutionId"])
+    else:
+        return None
+
+
+def handle_swinstid(swinstdict):
+    softwareInstanceId = swinstdict["softwareInstanceId"]
+    softwareId = handle_software(swinstdict["software"])
+    serverId = handle_server(swinstdict["server"])
+    return softwareInstanceId, softwareId, serverId
+
+
+def handle_solinstcomp(solutionId, solutionInstanceId, result):
+    for cntr in range(len(result)):
+        softwareInstanceId, softwareId, serverId = handle_swinstid(res[cnt].pop("softwareInstance"))
+        res[cntr]["softwareInstanceId"] = softwareInstanceId
+        res[cntr]["softwareId"] = softwareId
+        res[cntr]["serverId"] = serverId
+        res[cntr]["solutionId"] = solutionId
+        res[cntr]["solutionInstanceId"] = solutionInstanceId
+        # Todo: process State variable
+        res[cnt]["status"] = None
+    lcl.insert_rows("solinstcomp", res)
+
+
 cfg = my_env.init_env("bellavista", __file__)
 r = murcsrest.MurcsRest(cfg)
 lcl = localstore.sqliteUtils(cfg)
 
-"""
 res = []
 r.get_data("sites", reslist=res)
 lcl.insert_rows("site", res)
@@ -69,7 +95,6 @@ for record in records:
             res[cnt]["softwareId"] = handle_software(res[cnt].pop("software"))
         lcl.insert_rows("softinst", res)
 my_loop.end_loop()
-"""
 
 logging.info("Handling Solutions")
 res = []
@@ -79,3 +104,19 @@ for cnt in range(len(res)):
     res[cnt]["status"] = None
 lcl.insert_rows("solution", res)
 
+logging.info("Handling Solution Instances")
+query = "SELECT solutionId FROM solution"
+records = lcl.get_query(query)
+my_loop = my_env.LoopInfo("Solutions for Solution Instances", 20)
+for record in records:
+    my_loop.info_loop()
+    solId = record["solutionId"]
+    res = r.get_solinst_from_solution(solId)
+    if len(res) > 0:
+        for cnt in range(len(res)):
+            res[cnt]["solutionId"] = handle_solution(res[cnt].pop("solution"))
+            res[cnt].pop("contactPersons")
+            handle_solinstcomp(solId, res[cnt]["solutionInstanceId"], res[cnt].pop("solutionInstanceComponents"))
+            res[cnt].pop("solutionInstanceProperties")
+        lcl.insert_rows("solinst", res)
+my_loop.end_loop()
