@@ -5,6 +5,7 @@ import argparse
 import logging
 import pandas
 from lib import my_env
+from lib.murcs import *
 from lib import murcsrest
 
 # Configure command line arguments
@@ -30,9 +31,9 @@ for row in df.iterrows():
         softwareId=softwareId
     )
     for k in xl:
-        if pandas.notnull(xl[k]) and k not in my_env.excludedprops:
-            if k in my_env.fixedprops:
-                payload[k] = my_env.fixedprops[k]
+        if pandas.notnull(xl[k]) and k not in excludedprops:
+            if k in fixedprops:
+                payload[k] = fixedprops[k]
             else:
                 payload[k] = xl[k]
     r.add_soft(softwareId, payload)

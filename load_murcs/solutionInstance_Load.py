@@ -5,6 +5,7 @@ import argparse
 import logging
 import pandas
 from lib import my_env
+from lib.murcs import *
 from lib import murcsrest
 
 # Configure command line arguments
@@ -31,11 +32,11 @@ for row in df.iterrows():
         solutionInstanceId=solutionInstanceId
     )
     for k in xl:
-        if pandas.notnull(xl[k]) and k not in my_env.excludedprops:
-            if k in my_env.fixedprops:
-                payload[k] = my_env.fixedprops[k]
-            elif k in my_env.solInst_prop2dict:
-                payload[my_env.solInst_prop2dict[k][0]] = {my_env.solInst_prop2dict[k][1]: xl[k]}
+        if pandas.notnull(xl[k]) and k not in excludedprops:
+            if k in fixedprops:
+                payload[k] = fixedprops[k]
+            elif k in solInst_prop2dict:
+                payload[solInst_prop2dict[k][0]] = {solInst_prop2dict[k][1]: xl[k]}
             else:
                 payload[k] = xl[k]
     r.add_solInst(solutionId, solutionInstanceId, payload)

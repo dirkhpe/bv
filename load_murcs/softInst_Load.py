@@ -5,6 +5,7 @@ import argparse
 import logging
 import pandas
 from lib import my_env
+from lib.murcs import *
 from lib import murcsrest
 
 # Configure command line arguments
@@ -18,7 +19,7 @@ cfg = my_env.init_env("bellavista", __file__)
 r = murcsrest.MurcsRest(cfg)
 logging.info("Arguments: {a}".format(a=args))
 
-excludedprops = my_env.excludedprops
+excludedprops = excludedprops
 excludedprops.append("hostName")
 
 # Read the file
@@ -35,8 +36,8 @@ for row in df.iterrows():
     )
     for k in xl:
         if pandas.notnull(xl[k]) and k not in excludedprops:
-            if k in my_env.softInst_prop2dict:
-                payload[my_env.softInst_prop2dict[k][0]] = {my_env.softInst_prop2dict[k][1]: xl[k]}
+            if k in softInst_prop2dict:
+                payload[softInst_prop2dict[k][0]] = {softInst_prop2dict[k][1]: xl[k]}
             else:
                 payload[k] = xl[k]
     r.add_softInst(softwareInstanceId, payload)

@@ -14,6 +14,79 @@ from sqlalchemy.orm import relationship, sessionmaker
 Base = declarative_base()
 
 
+class NetworkIpAddress(Base):
+    """
+    Table containing the Network IP Address Information.
+    """
+    __tablename__ = "ipaddress"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    dns1 = Column(Text)
+    dns2 = Column(Text)
+    dnsSearchList = Column(Text)
+    dnsSuffix = Column(Text)
+    fqdns = Column(Text)
+    gateway = Column(Text)
+    ipAddress = Column(Text)
+    ipAddressType = Column(Text)
+    name = Column(Text)
+    netmask = Column(Text)
+    serverNetworkInterface = Column(Text)
+    serverNetworkInterfaceId = Column(Text)
+    vCenterNIC = Column(Text)
+    vLanId = Column(Text)
+
+
+class NetworkInterface(Base):
+    """
+    Table containing the Network Interface Information.
+    """
+    __tablename__ = "netiface"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    duplex = Column(Text)
+    interfaceName = Column(Text)
+    macAddress = Column(Text)
+    negotiation = Column(Text)
+    networkInterfaceId = Column(Text)
+    serverId = Column(Text)
+    speedMB = Column(Integer)
+
+
+class Person(Base):
+    """
+    Table containing the Person Information.
+    """
+    __tablename__ = "person"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    address = Column(Text)
+    company = Column(Text)
+    department = Column(Text)
+    email = Column(Text)
+    firstName = Column(Text)
+    lastName = Column(Text)
+    mobilePhoneNo = Column(Text)
+    phoneNo = Column(Text)
+    searchEmail = Column(Text)
+    title = Column(Text)
+
+
 class Server(Base):
     """
     Table containing the Server Information.
@@ -256,14 +329,42 @@ class SolutionInstanceComponent(Base):
     createdBy = Column(Text)
     clientId = Column(Text)
     version = Column(Text)
+    availability = Column(Text)
     priority = Column(Text)
     serverId = Column(Text)
     softwareId = Column(Text)
     softwareInstanceId = Column(Text)
     solutionId = Column(Text)
     solutionInstanceId = Column(Text)
+    status = Column(Text)
     validFrom = Column(Text)
     validTo = Column(Text)
+
+
+class SolutionToSolution(Base):
+    """
+    Table containing solution To Solution information.
+    """
+    __tablename__ = "soltosol"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    businessCriticality = Column(Text)
+    comment = Column(Text)
+    connectionDirection = Column(Text)
+    connectionFrequency = Column(Text)
+    connectionSubType = Column(Text)
+    connectionType = Column(Text)
+    connectionVolumeInByte = Column(Text)
+    description = Column(Text)
+    fromSolutionId = Column(Text)
+    middlewareDependency = Column(Text)
+    solutionToSolutionId = Column(Text)
+    toSolutionId = Column(Text)
 
 
 class sqliteUtils:

@@ -4,61 +4,15 @@ This script will collect information from Murcs and store it in a local database
 import logging
 from lib import localstore
 from lib import my_env
+from lib.murcs import *
 from lib import murcsrest
-
-
-def handle_server(serverdict):
-    if isinstance(serverdict, dict):
-        return serverdict["serverId"]
-    else:
-        return None
-
-
-def handle_site(sitedict):
-    if isinstance(sitedict, dict):
-        return sitedict["siteId"]
-    else:
-        return None
-
-
-def handle_software(swdict):
-    if isinstance(swdict, dict):
-        return swdict["softwareId"]
-    else:
-        return None
-
-
-def handle_solution(soldict):
-    if isinstance(soldict, dict):
-        return str(soldict["solutionId"])
-    else:
-        return None
-
-
-def handle_swinstid(swinstdict):
-    softwareInstanceId = swinstdict["softwareInstanceId"]
-    softwareId = handle_software(swinstdict["software"])
-    serverId = handle_server(swinstdict["server"])
-    return softwareInstanceId, softwareId, serverId
-
-
-def handle_solinstcomp(solutionId, solutionInstanceId, result):
-    for cntr in range(len(result)):
-        softwareInstanceId, softwareId, serverId = handle_swinstid(res[cnt].pop("softwareInstance"))
-        res[cntr]["softwareInstanceId"] = softwareInstanceId
-        res[cntr]["softwareId"] = softwareId
-        res[cntr]["serverId"] = serverId
-        res[cntr]["solutionId"] = solutionId
-        res[cntr]["solutionInstanceId"] = solutionInstanceId
-        # Todo: process State variable
-        res[cnt]["status"] = None
-    lcl.insert_rows("solinstcomp", res)
 
 
 cfg = my_env.init_env("bellavista", __file__)
 r = murcsrest.MurcsRest(cfg)
 lcl = localstore.sqliteUtils(cfg)
 
+"""
 res = []
 r.get_data("sites", reslist=res)
 lcl.insert_rows("site", res)
@@ -72,6 +26,23 @@ for cnt in range(len(res)):
     # Todo: process State variable
     res[cnt]["status"] = None
 lcl.insert_rows("server", res)
+
+logging.info("Handling Network information")
+query = "SELECT serverId FROM server"
+records = lcl.get_query(query)
+my_loop = my_env.LoopInfo("Servers for Network Information", 20)
+for record in records:
+    my_loop.info_loop()
+    serverId = record["serverId"]
+    res = r.get_server(serverId)
+    netinfo = res["serverNetworkInterfaces"]
+    if len(netinfo) > 0:
+        for cnt in range(len(netinfo)):
+            netinfo[cnt]["serverId"] = serverId
+            ipaddress_list = netinfo[cnt].pop("serverNetworkInterfaceIPAddresses")
+            if len(ipaddress_list) > 0:
+                lcl.insert_rows("ipaddress", ipaddress_list)
+        lcl.insert_rows("netiface", netinfo)
 
 logging.info("Handling Software")
 res = []
@@ -116,7 +87,45 @@ for record in records:
         for cnt in range(len(res)):
             res[cnt]["solutionId"] = handle_solution(res[cnt].pop("solution"))
             res[cnt].pop("contactPersons")
-            handle_solinstcomp(solId, res[cnt]["solutionInstanceId"], res[cnt].pop("solutionInstanceComponents"))
+            # Handle solution Instance Component records.
+            solinstcomp = res[cnt].pop("solutionInstanceComponents")
+            handle_solinstcomp(solId, res[cnt]["solutionInstanceId"], solinstcomp)
+            if len(solinstcomp) > 0:
+                lcl.insert_rows("solinstcomp", solinstcomp)
+            # Todo: handle solution instance components properties.
             res[cnt].pop("solutionInstanceProperties")
         lcl.insert_rows("solinst", res)
 my_loop.end_loop()
+
+logging.info("Handling solution to solution instances")
+solToSol_done = []
+query = "SELECT solutionId FROM solution"
+records = lcl.get_query(query)
+my_loop = my_env.LoopInfo("Solutions for Solution Instances", 20)
+for record in records:
+    my_loop.info_loop()
+    solId = record["solutionId"]
+    res = r.get_soltosol_from_solution(solId)
+    if len(res) > 0:
+        remember_res = []
+        for cnt in range(len(res)):
+            solToSolId = res[cnt]["solutionToSolutionId"]
+            # Make sure to capture only first appearance of solToSolId
+            if solToSolId not in solToSol_done:
+                solToSol_done.append(solToSolId)
+                res[cnt]["fromSolutionId"] = handle_solution(res[cnt].pop("fromSolution"))
+                res[cnt]["toSolutionId"] = handle_solution(res[cnt].pop("toSolution"))
+                # Todo: handle solutionToSolution Properties!
+                res[cnt].pop("solutionToSolutionProperties")
+                remember_res.append(res[cnt])
+            else:
+                print("{sts} already handled".format(sts=solToSolId))
+        if len(remember_res) > 0:
+            lcl.insert_rows("soltosol", remember_res)
+my_loop.end_loop()
+"""
+
+logging.info("Handling Person information")
+res = []
+r.get_data("persons", reslist=res)
+lcl.insert_rows("person", res)

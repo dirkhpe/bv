@@ -183,6 +183,28 @@ class MurcsRest:
             r.raise_for_status()
             return
 
+    def get_server(self, serverId):
+        """
+        This method launches the Rest call to get the server information for a single server. This method is used to
+        collect network interface and IP information.
+
+        :param serverId: Server Id required.
+        :return: Murcs information as a parsed json string.
+        """
+        url = self.url_base + 'servers/{serverId}'.format(serverId=serverId)
+        headers = {
+            'Accept': 'application/json'
+        }
+        r = requests.get(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            res = r.json()
+            return res
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+            return
+
     def get_softinst_from_server(self, serverId):
         """
         This method launches the Rest call to get the software Instances for a server. Limit is set to 100. No server
@@ -284,6 +306,31 @@ class MurcsRest:
         if r.status_code == 200:
             res = r.json()
             return res
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+            return
+
+    def get_soltosol_from_solution(self, solId):
+        """
+        This method launches the Rest call to get the solution to solution details for a solution.
+
+        :param solId: Solution Id for which the solution to solution Instances are required.
+        :return: Murcs information as a parsed json string.
+        """
+        limit = 100
+        url = self.url_base + 'solutionToSolution/all/{solId}'.format(solId=solId)
+        headers = {
+            'Accept': 'application/json'
+        }
+        payload = dict(
+            limit=limit
+        )
+        r = requests.get(url, headers=headers, auth=(self.user, self.passwd), params=payload)
+        if r.status_code == 200:
+            res = r.json()
+            return res["items"]
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
