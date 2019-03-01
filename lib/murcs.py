@@ -28,6 +28,23 @@ solInst_prop2dict = dict(
 )
 
 
+def handle_properties(propdict):
+    if len(propdict) > 0:
+        for cnt in range(len(propdict)):
+            try:
+                propdict[cnt].pop("self")
+            except KeyError:
+                pass
+    return propdict
+
+
+def handle_person(persondict):
+    if isinstance(persondict, dict):
+        return persondict["email"]
+    else:
+        return None
+
+
 def handle_server(serverdict):
     if isinstance(serverdict, dict):
         return serverdict["serverId"]
@@ -56,6 +73,39 @@ def handle_solution(soldict):
         return None
 
 
+def handle_solutionInstance(solinstdict, solId):
+    solInstComp_res = []
+    solInstProps = []
+    if len(solinstdict) > 0:
+        for cnt in range(len(solinstdict)):
+            solinstdict[cnt]["solutionId"] = handle_solution(solinstdict[cnt].pop("solution"))
+            solinstdict[cnt].pop("contactPersons")
+            # Handle solution Instance Component records.
+            solinstcomp = solinstdict[cnt].pop("solutionInstanceComponents")
+            if len(solinstcomp) > 0:
+                handle_solinstcomp(solinstcomp, solId, solinstdict[cnt]["solutionInstanceId"])
+                solInstComp_res += solinstcomp
+            # Todo: handle solution instance components properties.
+            solInstProps += handle_properties(solinstdict[cnt].pop("solutionInstanceProperties"))
+    return solinstdict, solInstComp_res, solInstProps
+
+
+def handle_solToSol(soltosoldict, solToSol_done):
+    remember_res = []
+    if len(soltosoldict) > 0:
+        for cnt in range(len(soltosoldict)):
+            solToSolId = soltosoldict[cnt]["solutionToSolutionId"]
+            # Make sure to capture only first appearance of solToSolId
+            if solToSolId not in solToSol_done:
+                solToSol_done.append(solToSolId)
+                soltosoldict[cnt]["fromSolutionId"] = handle_solution(soltosoldict[cnt].pop("fromSolution"))
+                soltosoldict[cnt]["toSolutionId"] = handle_solution(soltosoldict[cnt].pop("toSolution"))
+                # Todo: handle solutionToSolution Properties!
+                soltosoldict[cnt].pop("solutionToSolutionProperties")
+                remember_res.append(soltosoldict[cnt])
+    return remember_res
+
+
 def handle_swinstid(swinstdict):
     softwareInstanceId = swinstdict["softwareInstanceId"]
     softwareId = handle_software(swinstdict["software"])
@@ -63,13 +113,14 @@ def handle_swinstid(swinstdict):
     return softwareInstanceId, softwareId, serverId
 
 
-def handle_solinstcomp(solutionId, solutionInstanceId, res):
-    for cnt in range(len(res)):
-        softwareInstanceId, softwareId, serverId = handle_swinstid(res[cnt].pop("softwareInstance"))
-        res[cnt]["softwareInstanceId"] = softwareInstanceId
-        res[cnt]["softwareId"] = softwareId
-        res[cnt]["serverId"] = serverId
-        res[cnt]["solutionId"] = solutionId
-        res[cnt]["solutionInstanceId"] = solutionInstanceId
+def handle_solinstcomp(solinstcompdict, solutionId, solutionInstanceId):
+    for cnt in range(len(solinstcompdict)):
+        softwareInstanceId, softwareId, serverId = handle_swinstid(solinstcompdict[cnt].pop("softwareInstance"))
+        solinstcompdict[cnt]["softwareInstanceId"] = softwareInstanceId
+        solinstcompdict[cnt]["softwareId"] = softwareId
+        solinstcompdict[cnt]["serverId"] = serverId
+        solinstcompdict[cnt]["solutionId"] = solutionId
+        solinstcompdict[cnt]["solutionInstanceId"] = solutionInstanceId
         # Todo: process State variable
-        res[cnt]["status"] = None
+        solinstcompdict[cnt]["status"] = None
+    return solinstcompdict

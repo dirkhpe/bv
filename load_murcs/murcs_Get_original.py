@@ -1,13 +1,14 @@
 """
 This script will collect information from Murcs and store it in a local database.
+
+This is the original version of murcs_Get.py script. It looks like optimization in Solution collection is possible by
+evaluating solution details.
 """
 import logging
 from lib import localstore
 from lib import my_env
 from lib.murcs import *
 from lib import murcsrest
-
-solToSol_done = []
 
 
 cfg = my_env.init_env("bellavista", __file__)
@@ -18,11 +19,6 @@ lcl = localstore.sqliteUtils(cfg)
 res = []
 r.get_data("sites", reslist=res)
 lcl.insert_rows("site", res)
-
-logging.info("Handling Person information")
-res = []
-r.get_data("persons", reslist=res)
-lcl.insert_rows("person", res)
 
 logging.info("Handling Servers")
 res = []
@@ -37,12 +33,12 @@ lcl.insert_rows("server", res)
 logging.info("Handling Server detail information")
 query = "SELECT serverId FROM server"
 records = lcl.get_query(query)
-my_loop = my_env.LoopInfo("Server Details", 20)
+my_loop = my_env.LoopInfo("Servers for Network Information", 20)
 for record in records:
     my_loop.info_loop()
     serverId = record["serverId"]
     res = r.get_server(serverId)
-    netinfo = res.pop("serverNetworkInterfaces")
+    netinfo = res["serverNetworkInterfaces"]
     if len(netinfo) > 0:
         for cnt in range(len(netinfo)):
             netinfo[cnt]["serverId"] = serverId
@@ -50,13 +46,11 @@ for record in records:
             if len(ipaddress_list) > 0:
                 lcl.insert_rows("ipaddress", ipaddress_list)
         lcl.insert_rows("netiface", netinfo)
-    contacts = res.pop("contactPersons")
+    contacts = res["contactPersons"]
     if len(contacts) > 0:
         for cnt in range(len(contacts)):
             contacts[cnt]["email"] = handle_person(contacts[cnt].pop("person"))
         lcl.insert_rows("contactserver", contacts)
-    serverproperties = handle_properties(res.pop("serverProperties"))
-    lcl.insert_rows("serverproperty", serverproperties)
 
 logging.info("Handling Software")
 res = []
@@ -67,7 +61,6 @@ for cnt in range(len(res)):
 lcl.insert_rows("software", res)
 
 logging.info("Handling Software Instances")
-# Todo: Software Instance data collection needs to be done from server?
 query = "SELECT serverId FROM server"
 records = lcl.get_query(query)
 my_loop = my_env.LoopInfo("Server for Software Instances", 20)
@@ -81,42 +74,68 @@ for record in records:
             res[cnt]["softwareId"] = handle_software(res[cnt].pop("software"))
         lcl.insert_rows("softinst", res)
 my_loop.end_loop()
+"""
 
-logging.info("Collecting Solutions")
+logging.info("Handling Solutions")
 res = []
 r.get_data("solutions", reslist=res)
 for cnt in range(len(res)):
     # Todo: process State variable
     res[cnt]["status"] = None
 lcl.insert_rows("solution", res)
-"""
 
-logging.info("Handling Solutions")
+logging.info("Handling Solution Instances")
 query = "SELECT solutionId FROM solution"
 records = lcl.get_query(query)
-my_loop = my_env.LoopInfo("Solutions", 20)
+my_loop = my_env.LoopInfo("Solutions for Solution Instances", 20)
 for record in records:
     my_loop.info_loop()
     solId = record["solutionId"]
-    res = r.get_solution(solId)
+    res = r.get_solinst_from_solution(solId)
     if len(res) > 0:
-        solutionId = res.pop("solutionId")
-        solToSol_res = handle_solToSol(res.pop("toSolution"), solToSol_done)
-        lcl.insert_rows("soltosol", solToSol_res)
-        solToSol_res = handle_solToSol(res.pop("fromSolution"), solToSol_done)
-        lcl.insert_rows("soltosol", solToSol_res)
-        solInstance_res, solInstComp_res, solInstProps = handle_solutionInstance(res.pop("solutionInstances"),
-                                                                                 solutionId)
-        lcl.insert_rows("solinst", solInstance_res)
-        lcl.insert_rows("solinstcomp", solInstComp_res)
-        # lcl.insert_rows("solinstproperty", solInstProps)
-        contacts = res["contactPersons"]
-        if len(contacts) > 0:
-            for cnt in range(len(contacts)):
-                contacts[cnt]["email"] = handle_person(contacts[cnt].pop("person"))
-            lcl.insert_rows("contactsolution", contacts)
-        solprops = handle_properties(res.pop("solutionProperties"))
-        lcl.insert_rows("solutionproperty", solprops)
+        for cnt in range(len(res)):
+            res[cnt]["solutionId"] = handle_solution(res[cnt].pop("solution"))
+            res[cnt].pop("contactPersons")
+            # Handle solution Instance Component records.
+            solinstcomp = res[cnt].pop("solutionInstanceComponents")
+            handle_solinstcomp(solId, res[cnt]["solutionInstanceId"], solinstcomp)
+            if len(solinstcomp) > 0:
+                lcl.insert_rows("solinstcomp", solinstcomp)
+            # Todo: handle solution instance components properties.
+            res[cnt].pop("solutionInstanceProperties")
+        lcl.insert_rows("solinst", res)
 my_loop.end_loop()
 
-logging.info("End Application")
+logging.info("Handling solution to solution instances")
+solToSol_done = []
+query = "SELECT solutionId FROM solution"
+records = lcl.get_query(query)
+my_loop = my_env.LoopInfo("Solutions for Solution Instances", 20)
+for record in records:
+    my_loop.info_loop()
+    solId = record["solutionId"]
+    res = r.get_soltosol_from_solution(solId)
+    if len(res) > 0:
+        remember_res = []
+        for cnt in range(len(res)):
+            solToSolId = res[cnt]["solutionToSolutionId"]
+            # Make sure to capture only first appearance of solToSolId
+            if solToSolId not in solToSol_done:
+                solToSol_done.append(solToSolId)
+                res[cnt]["fromSolutionId"] = handle_solution(res[cnt].pop("fromSolution"))
+                res[cnt]["toSolutionId"] = handle_solution(res[cnt].pop("toSolution"))
+                # Todo: handle solutionToSolution Properties!
+                res[cnt].pop("solutionToSolutionProperties")
+                remember_res.append(res[cnt])
+            else:
+                print("{sts} already handled".format(sts=solToSolId))
+        if len(remember_res) > 0:
+            lcl.insert_rows("soltosol", remember_res)
+my_loop.end_loop()
+
+"""
+logging.info("Handling Person information")
+res = []
+r.get_data("persons", reslist=res)
+lcl.insert_rows("person", res)
+"""

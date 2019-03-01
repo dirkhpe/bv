@@ -231,26 +231,26 @@ class MurcsRest:
             r.raise_for_status()
             return
 
-    def get_sol(self, solId):
+    def get_solution(self, solutionId):
         """
         This method launches the Rest call to get the solution information
 
-        :param solId:
+        :param solutionId:
         :return:
         """
-        url = self.url_base + 'solutions/{solId}'.format(solId=solId)
+        url = self.url_base + 'solutions/{solutionId}'.format(solutionId=solutionId)
         headers = {
             'Accept': 'application/json'
         }
         r = requests.get(url, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
-            parsed_json = r.json()
-            print(parsed_json['fromSolution'][0]['comment'])
+            res = r.json()
+            return res
         else:
-            print("Investigate: {s}".format(s=r.status_code))
-            print(r.content)
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
             r.raise_for_status()
-        return
+            return
 
     def get_solinst_from_solution(self, solId):
         """
@@ -794,6 +794,30 @@ class MurcsRest:
         r = requests.put(url, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
             logging.info("Contact {personId} added to solution {solId}!".format(solId=solId, personId=personId))
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
+    def add_solution_property(self, solId, payload):
+        """
+        This method will add a property to a solution.
+
+        :param solId: Solution ID
+        :param payload: Dictionary with propertyName, propertyValue and description
+        :return:
+        """
+        propname = payload["propertyName"]
+        data = json.dumps(payload)
+        logging.debug("Payload: {p}".format(p=data))
+        path = "solutions/{solId}/properties/{prop}".format(solId=solId, prop=propname)
+        url = self.url_base + path
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.put(url, data=data, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            logging.info("Property {prop} with value {val} added to solution {solId}!"
+                         .format(prop=propname, solId=solId, val=payload["propertyValue"]))
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)

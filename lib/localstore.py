@@ -14,6 +14,40 @@ from sqlalchemy.orm import relationship, sessionmaker
 Base = declarative_base()
 
 
+class ContactServer(Base):
+    """
+    Table containing contact persons and roles per server.
+    """
+    __tablename__ = "contactserver"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    email = Column(Text)
+    role = Column(Text)
+    serverId = Column(Text)
+
+
+class ContactSolution(Base):
+    """
+    Table containing contact persons and roles per solution.
+    """
+    __tablename__ = "contactsolution"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    email = Column(Text)
+    role = Column(Text)
+    solutionId = Column(Text)
+
+
 class NetworkIpAddress(Base):
     """
     Table containing the Network IP Address Information.
@@ -161,6 +195,24 @@ class Server(Base):
     virtualizationUUID = Column(Text)
 
 
+class ServerProperty(Base):
+    """
+    Table containing the Server Property Information.
+    """
+    __tablename__ = "serverproperty"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    description = Column(Text)
+    propertyName = Column(Text)
+    propertyValue = Column(Text)
+    serverId = Column(Text)
+
+
 class Site(Base):
     """
     Table containing the Site information
@@ -241,6 +293,25 @@ class SoftwareInstance(Base):
     softwareInstanceType = Column(Text)
     validFrom = Column(Text)
     validTo = Column(Text)
+
+
+class SolutionInstanceProperty(Base):
+    """
+    Table containing the Solution Instance Property Information.
+    """
+    __tablename__ = "solinstproperty"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    description = Column(Text)
+    propertyName = Column(Text)
+    propertyValue = Column(Text)
+    solutionId = Column(Text)
+    solutionInstanceId = Column(Text)
 
 
 class Solution(Base):
@@ -339,6 +410,24 @@ class SolutionInstanceComponent(Base):
     status = Column(Text)
     validFrom = Column(Text)
     validTo = Column(Text)
+
+
+class SolutionProperty(Base):
+    """
+    Table containing the Solution Property Information.
+    """
+    __tablename__ = "solutionproperty"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    changedAt = Column(Text)
+    changedBy = Column(Text)
+    createdAt = Column(Text)
+    createdBy = Column(Text)
+    clientId = Column(Text)
+    version = Column(Text)
+    description = Column(Text)
+    propertyName = Column(Text)
+    propertyValue = Column(Text)
+    solutionId = Column(Text)
 
 
 class SolutionToSolution(Base):
@@ -450,18 +539,19 @@ class sqliteUtils:
         :param rowdict: List of Dictionary Rows
         :return:
         """
-        columns = ", ".join("`" + k + "`" for k in rowdict[0].keys())
-        values_template = ", ".join(["?"] * len(rowdict[0].keys()))
-        query = "insert into {tn} ({cols}) values ({vt})".format(tn=tablename, cols=columns, vt=values_template)
-        logging.debug("Insert query: {q}".format(q=query))
-        # cnt = my_env.LoopInfo(tablename, 50)
-        for line in rowdict:
-            # cnt.info_loop()
-            logging.debug(line)
-            values = tuple(line[key] for key in line.keys())
-            self.dbConn.execute(query, values)
-        # cnt.end_loop()
-        self.dbConn.commit()
+        if len(rowdict) > 0:
+            columns = ", ".join("`" + k + "`" for k in rowdict[0].keys())
+            values_template = ", ".join(["?"] * len(rowdict[0].keys()))
+            query = "insert into {tn} ({cols}) values ({vt})".format(tn=tablename, cols=columns, vt=values_template)
+            logging.debug("Insert query: {q}".format(q=query))
+            # cnt = my_env.LoopInfo(tablename, 50)
+            for line in rowdict:
+                # cnt.info_loop()
+                logging.debug(line)
+                values = tuple(line[key] for key in line.keys())
+                self.dbConn.execute(query, values)
+            # cnt.end_loop()
+            self.dbConn.commit()
         return
 
     def rebuild(self):
