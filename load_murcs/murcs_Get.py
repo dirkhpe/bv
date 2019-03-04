@@ -14,7 +14,6 @@ cfg = my_env.init_env("bellavista", __file__)
 r = murcsrest.MurcsRest(cfg)
 lcl = localstore.sqliteUtils(cfg)
 
-"""
 res = []
 r.get_data("sites", reslist=res)
 lcl.insert_rows("site", res)
@@ -23,6 +22,14 @@ logging.info("Handling Person information")
 res = []
 r.get_data("persons", reslist=res)
 lcl.insert_rows("person", res)
+
+logging.info("Handling Software")
+res = []
+r.get_data("software", reslist=res)
+for cnt in range(len(res)):
+    # Todo: process State variable
+    res[cnt]["status"] = None
+lcl.insert_rows("software", res)
 
 logging.info("Handling Servers")
 res = []
@@ -57,30 +64,12 @@ for record in records:
         lcl.insert_rows("contactserver", contacts)
     serverproperties = handle_properties(res.pop("serverProperties"))
     lcl.insert_rows("serverproperty", serverproperties)
-
-logging.info("Handling Software")
-res = []
-r.get_data("software", reslist=res)
-for cnt in range(len(res)):
-    # Todo: process State variable
-    res[cnt]["status"] = None
-lcl.insert_rows("software", res)
-
-logging.info("Handling Software Instances")
-# Todo: Software Instance data collection needs to be done from server?
-query = "SELECT serverId FROM server"
-records = lcl.get_query(query)
-my_loop = my_env.LoopInfo("Server for Software Instances", 20)
-for record in records:
-    my_loop.info_loop()
-    serverId = record["serverId"]
-    res = r.get_softinst_from_server(serverId)
-    if len(res) > 0:
-        for cnt in range(len(res)):
-            res[cnt]["serverId"] = handle_server(res[cnt].pop("server"))
-            res[cnt]["softwareId"] = handle_software(res[cnt].pop("software"))
-        lcl.insert_rows("softinst", res)
-my_loop.end_loop()
+    softinstances = res.pop("softwareInstances")
+    if len(softinstances) > 0:
+        for cnt in range(len(softinstances)):
+            softinstances[cnt]["serverId"] = handle_server(softinstances[cnt].pop("server"))
+            softinstances[cnt]["softwareId"] = handle_software(softinstances[cnt].pop("software"))
+        lcl.insert_rows("softinst", softinstances)
 
 logging.info("Collecting Solutions")
 res = []
@@ -89,7 +78,6 @@ for cnt in range(len(res)):
     # Todo: process State variable
     res[cnt]["status"] = None
 lcl.insert_rows("solution", res)
-"""
 
 logging.info("Handling Solutions")
 query = "SELECT solutionId FROM solution"
@@ -109,7 +97,7 @@ for record in records:
                                                                                  solutionId)
         lcl.insert_rows("solinst", solInstance_res)
         lcl.insert_rows("solinstcomp", solInstComp_res)
-        # lcl.insert_rows("solinstproperty", solInstProps)
+        lcl.insert_rows("solinstproperty", solInstProps)
         contacts = res["contactPersons"]
         if len(contacts) > 0:
             for cnt in range(len(contacts)):

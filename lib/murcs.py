@@ -29,6 +29,17 @@ solInst_prop2dict = dict(
 
 
 def handle_properties(propdict):
+    """
+    This method handles the property information. In case of servers and solutions, properties are provided in a list of
+    property dictionaries. In case of solution instances, properties are provided as a dictionary with the property
+    name is key and attributes are in the value dictionary.
+
+    :param propdict: list or dictionary.
+    :return:
+    """
+    # Convert dictionary to list
+    if isinstance(propdict, dict):
+        propdict = [propdict[k] for k in propdict if 'imagePositions' not in k]
     if len(propdict) > 0:
         for cnt in range(len(propdict)):
             try:
