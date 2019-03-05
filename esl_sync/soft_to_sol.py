@@ -15,7 +15,7 @@ if __name__ == "__main__":
     r = murcsrest.MurcsRest(cfg)
 
     query = """
-    SELECT server.id AS server_id, server.serverId AS serverId, softinst.id AS softInst_id, soft.id AS soft_id,
+    SELECT server.serverId AS serverId, softinst.id AS softInst_id, soft.id AS soft_id,
            solinst.id AS solInst_id, sol.id AS sol_id
     FROM server
     INNER JOIN client on server.clientId=client.id

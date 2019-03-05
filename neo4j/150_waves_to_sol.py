@@ -1,23 +1,22 @@
 import logging
 import os
 import pandas
+from lib import localstore
 from lib import my_env
 from lib import neostore
-
-# Node Labels
-solutionlbl = "Solution"
-wavelbl = "Wave"
-# Relations
-solution2wave = "inWave"
+from lib.neostructure import *
 
 cfg = my_env.init_env("bellavista", __file__)
 logging.info("Start Application")
 ns = neostore.NeoStore(cfg)
+lcl = localstore.sqliteUtils(cfg)
+
 # Get solution components
-solution_nodes = ns.get_nodes(solutionlbl)
+solution_nodes = ns.get_nodes(lbl_solution)
 solution_d = {}
 for node in solution_nodes:
-    solution_d[node["solId"]] = node
+    solution_d[node["solutionId"]] = node
+
 appsgroup_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["appsgroup"])
 wave_d = {}
 
@@ -38,7 +37,7 @@ for row in df.iterrows():
         node_params = dict(
             wave=miggroup
         )
-        wave_d[miggroup] = ns.create_node(wavelbl, **node_params)
+        wave_d[miggroup] = ns.create_node(lbl_wave, **node_params)
         wave_node = wave_d[miggroup]
     solId = xl["UniqueId"]
     if pandas.notnull(solId):

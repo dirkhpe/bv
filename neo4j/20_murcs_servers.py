@@ -1,21 +1,12 @@
 """
-This script will read the file murcs_servers and convert it to a Neo4J database.
+This script will read the server table and convert it to a Neo4J database.
 """
 
 import logging
-import os
-import pandas
+from lib import localstore
 from lib import my_env
+from lib.neostructure import *
 from lib import neostore
-
-# Node Labels
-serverlbl = "Server"
-sitelbl = "Site"
-iplbl = "IP"
-# Relations
-server2ip = "hasIP"
-parent2server = "hasVirtual"
-site2server = "hasDev"
 
 ign_srv = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "category", "classification",
            "currentApproach", "futureApproach", "hwModel", "managementRegion", "clientId", "osId", "softName",
@@ -23,33 +14,34 @@ ign_srv = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "categ
 
 cfg = my_env.init_env("bellavista", __file__)
 logging.info("Start Application")
+lcl = localstore.sqliteUtils(cfg)
 ns = neostore.NeoStore(cfg)
-servers_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["servers"])
-df = pandas.read_excel(servers_file)
+
+servers = lcl.get_table("server")
 parentServer_d = {}
 siteId_d = {}
 srv_node_d = {}
 my_loop = my_env.LoopInfo("Servers", 20)
-for row in df.iterrows():
+for trow in servers:
     # Get excel row in dict format
-    xl = row[1].to_dict()
+    row = dict(trow)
     # Get server links
-    serverType = xl.pop("serverType")
-    parentServer = xl.pop("parentServer")
-    if pandas.notnull(parentServer):
-        parentServer_d[xl["serverId"]] = parentServer
-    siteId = xl.pop("siteId")
+    serverType = row.pop("serverType")
+    parentServer = row.pop("parentServer")
+    if parentServer:
+        parentServer_d[row["serverId"]] = parentServer
+    siteId = row.pop("siteId")
     if serverType == "PHYSICAL":
         # Remember SiteId only for physical servers.
-        if pandas.notnull(siteId):
-            siteId_d[xl["serverId"]] = siteId
+        if siteId:
+            siteId_d[row["serverId"]] = siteId
     # Server link information is handled and removed from row, now handle remaining columns
     node_params = {}
-    for k in xl:
+    for k in row:
         if k not in ign_srv:
-            if pandas.notnull(xl[k]):
-                node_params[k] = xl[k]
-    srv_node_d[xl["serverId"]] = ns.create_node(serverlbl, **node_params)
+            if row[k]:
+                node_params[k] = row[k]
+    srv_node_d[row["serverId"]] = ns.create_node(lbl_server, **node_params)
     my_loop.info_loop()
 my_loop.end_loop()
 
@@ -63,7 +55,7 @@ my_loop.end_loop()
 
 # Link to Site
 # Get site nodes
-site_nodes = ns.get_nodes(sitelbl)
+site_nodes = ns.get_nodes(lbl_site)
 site_node_d = {}
 for node in site_nodes:
     site_node_d[node["siteId"]] = node

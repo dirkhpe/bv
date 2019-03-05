@@ -1,32 +1,28 @@
 import logging
-import os
-import pandas
+from lib import localstore
 from lib import my_env
 from lib import neostore
-
-# Node Labels
-solcomplbl = "SolComp"
-sapsidlbl = "SapSid"
-# Relations
-solcomp2sap = "inSid"
+from lib.neostructure import *
 
 cfg = my_env.init_env("bellavista", __file__)
 logging.info("Start Application")
 ns = neostore.NeoStore(cfg)
+lcl = localstore.sqliteUtils(cfg)
+
 # Get solution Components
-solcomp_nodes = ns.get_nodes(solcomplbl)
+solcomp_nodes = ns.get_nodes(lbl_solcomp)
 solcomp_d = {}
 sap_d = {}
 for node in solcomp_nodes:
-    solcomp_d[node["solInstId"]] = node
-solcompprops_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["solcompprops"])
-df = pandas.read_excel(solcompprops_file)
+    solcomp_d[node["solutionInstanceId"]] = node
+
+solcompprops_recs = lcl.get_table("solinstproperty")
 my_loop = my_env.LoopInfo("SolCompProps", 20)
-for row in df.iterrows():
+for trow in solcompprops_recs:
     # Get excel row in dict format
-    xl = row[1].to_dict()
+    xl = dict(trow)
     # Get solution  component node
-    solInstId = xl.pop("solInstId")
+    solInstId = xl.pop("solutionInstanceId")
     solcomp_node = solcomp_d[solInstId]
     sid = xl.pop('propertyValue')
     node_params = dict(
@@ -35,7 +31,7 @@ for row in df.iterrows():
     try:
         sap_node = sap_d[sid]
     except KeyError:
-        sap_d[sid] = ns.create_node(sapsidlbl, **node_params)
+        sap_d[sid] = ns.create_node(lbl_sapsid, **node_params)
         sap_node = sap_d[sid]
     ns.create_relation(from_node=solcomp_node, rel=solcomp2sap, to_node=sap_node)
     my_loop.info_loop()

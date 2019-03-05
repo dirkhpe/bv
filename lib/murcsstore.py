@@ -59,6 +59,7 @@ class Murcs:
         """
         This method will return the table as a list of named rows. This means that each row in the list will return
         the table column value as an attribute. E.g. row.name will return the value for column name in each row.
+
         :param tablename:
         :return:
         """
@@ -161,6 +162,7 @@ class Murcs:
         """
         This method will return the server record for the server with this hostName, or False if no server is found
         for the hostName and the clientId.
+
         :param hostName:
         :return: Dict with server record including id and serverId of the server, or False if the server does not exist.
         """
@@ -287,10 +289,9 @@ class Murcs:
 
     def get_softInst_os(self, hostName):
         """
-        This method will return the software instance record for an Operating System attached to a servername.
+        This method will return the software instance record for an Operating System attached to a serverName.
 
         :param hostName: hostName of the server.
-
         :return: instance record or False if not found.
         """
         query = """

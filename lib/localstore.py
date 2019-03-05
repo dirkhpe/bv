@@ -514,6 +514,63 @@ class sqliteUtils:
         res = self.cur.fetchall()
         return res
 
+    def get_server(self, hostName):
+        """
+        This method will return the server record for the server with this hostName, or False if no server is found
+        for the hostName and the clientId.
+
+        :param hostName:
+        :return: Dict with server record including id and serverId of the server, or False if the server does not exist.
+        """
+        query = "SELECT * FROM server WHERE hostName=%(hostName)s"
+        self.cur.execute(query, {"hostName": hostName})
+        res = self.cur.fetchall()
+        if len(res) > 0:
+            return res[0]
+        else:
+            return False
+
+    def get_softInst_os(self, hostName):
+        """
+        This method will return the software instance record for an Operating System attached to a serverName.
+
+        :param hostName: hostName of the server.
+        :return: instance record or False if not found.
+        """
+        query = """
+            SELECT i.softwareInstanceId as softwareInstanceId, h.serverId as serverId, s.softwareId as softwareId
+            FROM softinst i
+            INNER JOIN software s on s.softwareId = i.softwareId
+            INNER JOIN server h on h.serverId=i.serverId
+            WHERE h.hostName=%(hostName)s
+              AND i.softwareInstanceType = %(instType)s
+        """
+        cols = dict(
+            hostName=hostName,
+            instType='OperatingSystem'
+        )
+        self.cur.execute(query, cols)
+        res = self.cur.fetchall()
+        if len(res) > 0:
+            logging.debug("OS Instance for host {hostName} found.".format(hostName=hostName))
+            return res[0]
+        else:
+            logging.error("OS Instance for {hostName} not found.".format(hostName=hostName))
+            return False
+
+    def get_table(self, tablename):
+        """
+        This method will return the table as a list of named rows. This means that each row in the list will return
+        the table column values as an attribute. E.g. row.name will return the value for column name in each row.
+
+        :param tablename:
+        :return:
+        """
+        query = "SELECT * FROM {t}".format(t=tablename)
+        self.cur.execute(query)
+        res = self.cur.fetchall()
+        return res
+
     def insert_row(self, tablename, rowdict):
         """
         This method will insert a dictionary row into a table.

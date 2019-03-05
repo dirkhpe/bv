@@ -5,11 +5,14 @@ A list of servers in MURCS but no longer in VPC will be created.
 import argparse
 import logging
 import pandas
+from lib import localstore
 from lib import my_env
-from lib import murcsrest, murcsstore
+from lib import murcsrest
+
+ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "clientId", "siteId", "version", "dataQuality",
+          "parentServerId"]
 
 dc_names = ["EMEA-DE-Frankfurt-eshelter-B"]
-ignore = my_env.server_ignore
 
 # Configure command line arguments
 parser = argparse.ArgumentParser(
@@ -19,7 +22,7 @@ parser.add_argument('-f', '--filename', type=str, required=True,
                     help='Please provide the file with ESL Server info..')
 args = parser.parse_args()
 cfg = my_env.init_env("bellavista", __file__)
-mdb = murcsstore.Murcs(cfg)
+lcl = localstore.sqliteUtils(cfg)
 r = murcsrest.MurcsRest(cfg)
 logging.info("Arguments: {a}".format(a=args))
 
@@ -53,12 +56,12 @@ for row in df.iterrows():
     esl = row[1].to_dict()
     # Only handle systems from VPC.
     if esl["DC Name"] in dc_names:
-        host = my_env.fmo_serverId(esl["System Name"])
-        srv_in_esl.append(host)
+        serverId = my_env.fmo_serverId(esl["System Name"])
+        srv_in_esl.append(serverId)
         # Create dictionary with info from ESL
         serverprops = dict(
-            hostName=host,
-            serverId=host,
+            hostName=serverId,
+            serverId=serverId,
             site=dict(siteId=esl["DC Name"])
         )
         # Add fixed strings to dictionary
@@ -80,14 +83,14 @@ for row in df.iterrows():
                     # if null then k will not be added to serverprops so value in Murcs will be set to blank
                     serverprops[k] = esl[m2e[k]]
         # Check for update or new record
-        murcs_rec = mdb.get_server(host)
+        murcs_rec = lcl.get_server(serverId)
         initialize_os_id = "to be defined"
         os_id = initialize_os_id
         if murcs_rec:
             # Remember softId for OS
-            soft_rec = mdb.get_softInst_os(host)
+            soft_rec = lcl.get_softInst_os(serverId)
             if soft_rec:
-                os_id = soft_rec["softId"]
+                os_id = soft_rec["softwareId"]
             # Update existing server record to guarantee that all murcs fields are in serverprops.
             for k in murcs_rec:
                 if not ((k in ignore) or (k in m2e) or (k in m2e_fixed)):
@@ -110,9 +113,9 @@ for row in df.iterrows():
                         updates.append((k, serverprops[k]))
             if len(updates) > 0:
                 logging.info("Update on {s}: {u}".format(s=serverprops["hostName"], u=updates))
-                r.add_server(host, serverprops)
+                r.add_server(serverId, serverprops)
         else:
-            r.add_server(host, serverprops)
+            r.add_server(serverId, serverprops)
 
         # Add OS if new or Update compared to previous version
         os = esl["OS Version"]
@@ -127,26 +130,19 @@ for row in df.iterrows():
                 params = dict(
                     instType='OperatingSystem'
                 )
-                r.add_softInst_calc(softId, host, **params)
+                r.add_softInst_calc(softId, serverId, **params)
             elif os_id != softId:
-                logging.info("Server {h} new OS {s} (from {o})".format(h=host, s=softId, o=os_id))
+                logging.info("Server {h} new OS {s} (from {o})".format(h=serverId, s=softId, o=os_id))
                 params = dict(
                     instType='OperatingSystem'
                 )
-                r.add_softInst_calc(softId, host, **params)
+                r.add_softInst_calc(softId, serverId, **params)
 my_loop.end_loop()
 
 # Now find servers in MURCS that are not in ESL.
-query = """
-SELECT server.hostName as hostName, server.serverId as serverId
-FROM server
-INNER JOIN client on server.clientId=client.id
-WHERE client.clientId = "{clientId}"
-AND server.hostName LIKE "VPC.%"
-""".format(clientId=cfg["Murcs"]["clientId"])
-
-res = mdb.get_query(query)
+query = "SELECT hostName, serverId FROM server WHERE serverId LIKE 'VPC.%'"
+res = lcl.get_query(query)
 for rec in res:
-    if rec["hostName"] not in srv_in_esl:
+    if rec["serverId"] not in srv_in_esl:
         logging.error("Server {h} in MURCS, not in ESL.".format(h=rec["hostName"]))
         r.remove_server(rec["serverId"])

@@ -1,64 +1,44 @@
 import logging
-import os
-import pandas
+from lib import localstore
 from lib import my_env
+from lib.murcs import *
 from lib import neostore
-
-# Node Labels
-instlbl = "Instance"
-serverlbl = "Server"
-softVersionlbl = "softVersion"
-# Relations
-server2inst = "serverInst"
-inst2version = "isVersion"
-
-ignore = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "clientId"]
+from lib.neostructure import *
 
 cfg = my_env.init_env("bellavista", __file__)
 logging.info("Start Application")
 ns = neostore.NeoStore(cfg)
-
-# First collect all software Instance Properties
-softInstProp_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["softInstProp"])
-df = pandas.read_excel(softInstProp_file)
-instProp = {}
-for row in df.iterrows():
-    xl = row[1].to_dict()
-    instProp[xl.pop("instId")] = dict(Function=xl.pop("propertyValue"))
+lcl = localstore.sqliteUtils(cfg)
 
 # Then handle all software Instances
-serversw_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["serversw"])
-df = pandas.read_excel(serversw_file)
 # Get Server Nodes
-server_nodes = ns.get_nodes(serverlbl)
+server_nodes = ns.get_nodes(lbl_server)
 server_d = {}
 for node in server_nodes:
     server_d[node["serverId"]] = node
 # Get software Nodes
-soft_nodes = ns.get_nodes(softVersionlbl)
+soft_nodes = ns.get_nodes(lbl_softVersion)
 soft_d = {}
 for node in soft_nodes:
-    soft_d[node["softId"]] = node
+    soft_d[node["softwareId"]] = node
 
-# Now handle all lines
+# Now handle software instances
+serversw_recs = lcl.get_table("softinst")
 my_loop = my_env.LoopInfo("Server to Soft", 20)
-for row in df.iterrows():
+for trow in serversw_recs:
     my_loop.info_loop()
     # Get excel row in dict format
-    xl = row[1].to_dict()
+    xl = dict(trow)
     serverId = xl.pop("serverId")
     server_node = server_d[serverId]
-    softId = xl.pop("softId")
+    softId = xl.pop("softwareId")
     soft_node = soft_d[softId]
     node_params = {}
     for k in xl:
-        if k not in ignore:
-            if pandas.notnull(xl[k]):
+        if k not in excludedprops:
+            if xl[k]:
                 node_params[k] = xl[k]
-    if node_params["instId"] in instProp:
-        for k in instProp[node_params["instId"]]:
-            node_params[k] = instProp[node_params["instId"]][k]
-    inst_node = ns.create_node(instlbl, **node_params)
-    ns.create_relation(from_node=server_node, rel=server2inst, to_node=inst_node)
-    ns.create_relation(from_node=inst_node, rel=inst2version, to_node=soft_node)
+    inst_node = ns.create_node(lbl_instance, **node_params)
+    ns.create_relation(from_node=server_node, rel=server2instance, to_node=inst_node)
+    ns.create_relation(from_node=inst_node, rel=instance2softVersion, to_node=soft_node)
 my_loop.end_loop()

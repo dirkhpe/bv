@@ -2,9 +2,6 @@
 This script consolidates the murcs specific functions.
 """
 
-server_ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy",
-                 "clientId", "siteId", "version", "dataQuality", "parentServerId"]
-solcomp_ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "version", "solId"]
 excludedprops = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "clientId", "version", "dataQuality",
                  "ragState"]
 

@@ -1,30 +1,27 @@
 import logging
-import os
-import pandas
+from lib import localstore
 from lib import my_env
+from lib.murcs import *
 from lib import neostore
+from lib.neostructure import *
 
-# Node Labels
-solutionlbl = "Solution"
-# Relations
-
-ignore = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "clientid", "watchSol", "longDescription",
-          "description", "assessmentComplete"]
+ignore = excludedprops + ["longDescription", "description", "assessmentComplete"]
 
 cfg = my_env.init_env("bellavista", __file__)
 logging.info("Start Application")
 ns = neostore.NeoStore(cfg)
-solutions_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["solutions"])
-df = pandas.read_excel(solutions_file)
+lcl = localstore.sqliteUtils(cfg)
+
+solutions_recs = lcl.get_table("solution")
 my_loop = my_env.LoopInfo("Solutions", 20)
-for row in df.iterrows():
+for trow in solutions_recs:
     # Get excel row in dict format
-    xl = row[1].to_dict()
+    row = dict(trow)
     node_params = {}
-    for k in xl:
+    for k in row:
         if k not in ignore:
-            if pandas.notnull(xl[k]):
-                node_params[k] = xl[k]
-    ns.create_node(solutionlbl, **node_params)
+            if row[k]:
+                node_params[k] = row[k]
+    ns.create_node(lbl_solution, **node_params)
     my_loop.info_loop()
 my_loop.end_loop()

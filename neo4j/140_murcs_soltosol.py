@@ -1,39 +1,37 @@
 import logging
-import os
-import pandas
+from lib import localstore
 from lib import my_env
+from lib.murcs import *
 from lib import neostore
+from lib.neostructure import *
 
-# Node Labels
-solutionlbl = "Solution"
-# Relations
-sol2sol = "sol2sol"
-
-ignore = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "clientid", "solId_nr"]
+ignore = excludedprops + ["solId_nr"]
 
 cfg = my_env.init_env("bellavista", __file__)
 logging.info("Start Application")
 ns = neostore.NeoStore(cfg)
+lcl = localstore.sqliteUtils(cfg)
+
 # Get solutions
-solution_nodes = ns.get_nodes(solutionlbl)
+solution_nodes = ns.get_nodes(lbl_solution)
 solution_d = {}
 for node in solution_nodes:
-    solution_d[node["solId"]] = node
-sol2sol_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["sol2sol"])
-df = pandas.read_excel(sol2sol_file)
+    solution_d[node["solutionId"]] = node
+
+sol2sol_recs = lcl.get_table("soltosol")
 my_loop = my_env.LoopInfo("Sol2sol", 20)
-for row in df.iterrows():
+for trow in sol2sol_recs:
     # Get excel row in dict format
-    xl = row[1].to_dict()
+    xl = dict(trow)
     # Get solution node
-    fromSolId = xl.pop("fromSolId")
+    fromSolId = xl.pop("fromSolutionId")
     from_sol_node = solution_d[str(fromSolId)]
-    toSolId = xl.pop("toSolId")
+    toSolId = xl.pop("toSolutionId")
     to_sol_node = solution_d[str(toSolId)]
-    dir = xl.pop("conDirection")
-    if dir != "T2S":
-        ns.create_relation(from_node=from_sol_node, rel=sol2sol, to_node=to_sol_node)
-    if dir != "S2T":
-        ns.create_relation(from_node=to_sol_node, rel=sol2sol, to_node=from_sol_node)
+    direction = xl.pop("connectionDirection")
+    if direction != "T2S":
+        ns.create_relation(from_node=from_sol_node, rel=solution2solution, to_node=to_sol_node)
+    if direction != "S2T":
+        ns.create_relation(from_node=to_sol_node, rel=solution2solution, to_node=from_sol_node)
     my_loop.info_loop()
 my_loop.end_loop()

@@ -1,57 +1,50 @@
 import logging
-import os
-import pandas
+from lib import localstore
 from lib import my_env
+from lib.murcs import *
 from lib import neostore
+from lib.neostructure import *
 
-# Node Labels
-instancelbl = "Instance"
-solutionlbl = "Solution"
-solcomplbl = "SolComp"
-solInstComplbl = "SolInstComp"
-# Relations
-solinstcomp2comp = "toComponent"
-inst2solinstcomp = "toInstComp"
-
-ignore = ["changedAt", "changedBy", "createdAt", "createdBy", "version", "clientid", "solInstId_nr", "softInstId_nr",
-          "serverId", "softId", "solId"]
+ignore = excludedprops + ["solInstId_nr", "softInstId_nr", "serverId", "softId", "solId"]
 
 cfg = my_env.init_env("bellavista", __file__)
 logging.info("Start Application")
 ns = neostore.NeoStore(cfg)
+lcl = localstore.sqliteUtils(cfg)
+
 # Get solution components
-solcomp_nodes = ns.get_nodes(solcomplbl)
+solcomp_nodes = ns.get_nodes(lbl_solcomp)
 solcomp_d = {}
 for node in solcomp_nodes:
-    solcomp_d[node["solInstId"]] = node
-instance_nodes = ns.get_nodes(instancelbl)
+    solcomp_d[node["solutionInstanceId"]] = node
+instance_nodes = ns.get_nodes(lbl_instance)
 instance_d = {}
 for node in instance_nodes:
-    instance_d[node["instId"]] = node
-solinstcomp_file = os.path.join(cfg["MurcsDump"]["dump_dir"], cfg["MurcsDump"]["solinstcomp"])
-df = pandas.read_excel(solinstcomp_file)
+    instance_d[node["softwareInstanceId"]] = node
+
+solinstcomp_recs = lcl.get_table("solinstcomp")
 my_loop = my_env.LoopInfo("SolInstComp", 20)
-for row in df.iterrows():
+for trow in solinstcomp_recs:
     # Get excel row in dict format
-    xl = row[1].to_dict()
+    row = dict(trow)
     # Get solution component node
-    solcomp = xl.pop("solInstId")
+    solcomp = row.pop("solutionInstanceId")
     solcomp_node = solcomp_d[solcomp]
-    inst = xl.pop("softInstId")
+    inst = row.pop("softwareInstanceId")
     inst_node = instance_d[inst]
     node_params = {}
     # First check for validFrom - is this FMO mode?
-    mode = xl.pop("validFrom")
-    if pandas.notnull(mode):
+    mode = row.pop("validFrom")
+    if mode:
         node_params["mode"] = "FMO"
     else:
         node_params["mode"] = "CMO"
-    for k in xl:
+    for k in row:
         if k not in ignore:
-            if pandas.notnull(xl[k]):
-                node_params[k] = xl[k]
-    solinstcomp_node = ns.create_node(solInstComplbl, **node_params)
-    ns.create_relation(from_node=inst_node, rel=inst2solinstcomp, to_node=solinstcomp_node)
-    ns.create_relation(from_node=solinstcomp_node, rel=solinstcomp2comp, to_node=solcomp_node)
+            if row[k]:
+                node_params[k] = row[k]
+    solinstcomp_node = ns.create_node(lbl_solinstcomp, **node_params)
+    ns.create_relation(from_node=inst_node, rel=instance2solinstcomp, to_node=solinstcomp_node)
+    ns.create_relation(from_node=solinstcomp_node, rel=solinstcomp2solcomp, to_node=solcomp_node)
     my_loop.info_loop()
 my_loop.end_loop()
