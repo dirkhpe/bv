@@ -148,18 +148,6 @@ def get_inifile(projectname):
     return ini_config
 
 
-def fmo_serverId(fqdn):
-    """
-    This method will return the FMO serverId. The serverId will also be used as FMO hostName.
-    FMO serverId has 'VPC.' in front of servername.
-
-    :param fqdn: or servername.
-    :return: 'VPC.' + servername.lower()
-    """
-    fqdn_arr = fqdn.strip().lower().split(".")
-    return "VPC.{h}".format(h=fqdn_arr[0])
-
-
 def get_named_row(nr_name, col_hrd):
     """
     This method will create a named tuple row.

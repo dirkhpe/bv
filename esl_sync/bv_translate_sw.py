@@ -6,7 +6,7 @@ It will read existing OS IDs in Murcs to guarantee that no duplicates are loaded
 import logging
 import pandas
 from lib import my_env
-from lib import murcsstore
+from lib import localstore
 from lib import murcsrest
 
 
@@ -42,23 +42,17 @@ def handle_tx_file(sheet):
     my_loop.end_loop()
 
 
-if __name__ == "__main__":
-    # Configure command line arguments
-    cfg = my_env.init_env("bellavista", __file__)
-    mdb = murcsstore.Murcs(cfg)
-    r = murcsrest.MurcsRest(cfg)
+# Configure command line arguments
+cfg = my_env.init_env("bellavista", __file__)
+lcl = localstore.sqliteUtils(cfg)
+r = murcsrest.MurcsRest(cfg)
 
-    # Get SW IDs - Re-use query from extract_murcs\soft.py
-    query = """
-    SELECT softId
-    FROM soft t1
-    INNER JOIN client ON client.id=t1.clientId
-    WHERE client.clientId="{clientId}";
-    """.format(clientId=cfg["Murcs"]["clientId"])
-    res = mdb.get_query(query)
-    softId_arr = [rec["softId"] for rec in res]
+# Get SW IDs - Re-use query from extract_murcs\soft.py
+query = "SELECT distinct softwareId FROM software"
+res = lcl.get_query(query)
+softId_arr = [rec["softwareId"] for rec in res]
 
-    # Read the OS translation file
-    filename = cfg["Main"]["translate"]
-    for sht in ["os", "sw"]:
-        handle_tx_file(sht)
+# Read the OS translation file
+filename = cfg["Main"]["translate"]
+for sht in ["os", "sw"]:
+    handle_tx_file(sht)

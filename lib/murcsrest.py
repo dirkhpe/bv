@@ -517,12 +517,15 @@ class MurcsRest:
         In case this is a database with a known schema, instSubType will have the schema name.
 
         :param softId: ID Name for the Software
-        :param serverId: ID Name for the Server
+        :param serverId: ID Name for the Server. If serverId starts with 'vpc.' then this will converted to 'VPC.'
         :param params: dictionary with additional attributes. softInstId is mandatory for Type 'Application' Type and
         environment not Production. instSubType: (Optional) Schema of the instance, or environment for Application-type
         software instances. instType: Defaults to 'Application'.
         :return:
         """
+        params["server"] = dict(serverId=serverId)
+        if 'vpc' == serverId[:len('vpc')]:
+            serverId = 'VPC' + serverId[len('vpc'):]
         try:
             softwareInstanceId = params.pop("softInstId")
         except KeyError:
@@ -539,7 +542,6 @@ class MurcsRest:
             softwareInstanceType = params.pop("instType")
         except KeyError:
             softwareInstanceType = "Application"
-        params["server"] = dict(serverId=serverId)
         params["software"] = dict(softwareId=softId)
         params["softwareInstanceId"] = softwareInstanceId
         params["softwareInstanceType"] = softwareInstanceType

@@ -6,8 +6,7 @@ import logging
 import os
 import pymysql
 import sqlite3
-from lib import my_env
-from sqlalchemy import Column, Integer, Text, create_engine, ForeignKey, VARCHAR
+from sqlalchemy import Column, Integer, Text, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 
@@ -142,7 +141,7 @@ class Server(Base):
     clusterArchitecture = Column(Text)
     clusterName = Column(Text)
     clusterTechnologie = Column(Text)
-    cmdbSystemId = Column(Text)
+    cmdbSystemId = Column(Integer)
     contact = Column(Text)
     contractServiceLevel = Column(Text)
     coreCount = Column(Integer)
@@ -514,27 +513,27 @@ class sqliteUtils:
         res = self.cur.fetchall()
         return res
 
-    def get_server(self, hostName):
+    def get_server(self, serverId):
         """
         This method will return the server record for the server with this hostName, or False if no server is found
         for the hostName and the clientId.
 
-        :param hostName:
+        :param serverId:
         :return: Dict with server record including id and serverId of the server, or False if the server does not exist.
         """
-        query = "SELECT * FROM server WHERE hostName=%(hostName)s"
-        self.cur.execute(query, {"hostName": hostName})
+        query = "SELECT * FROM server WHERE serverId=?"
+        self.cur.execute(query, (serverId,))
         res = self.cur.fetchall()
         if len(res) > 0:
             return res[0]
         else:
             return False
 
-    def get_softInst_os(self, hostName):
+    def get_softInst_os(self, serverId):
         """
         This method will return the software instance record for an Operating System attached to a serverName.
 
-        :param hostName: hostName of the server.
+        :param serverId: serverId of the server.
         :return: instance record or False if not found.
         """
         query = """
@@ -542,20 +541,16 @@ class sqliteUtils:
             FROM softinst i
             INNER JOIN software s on s.softwareId = i.softwareId
             INNER JOIN server h on h.serverId=i.serverId
-            WHERE h.hostName=%(hostName)s
-              AND i.softwareInstanceType = %(instType)s
+            WHERE h.serverId=?
+              AND i.softwareInstanceType = 'OperatingSystem'
         """
-        cols = dict(
-            hostName=hostName,
-            instType='OperatingSystem'
-        )
-        self.cur.execute(query, cols)
+        self.cur.execute(query, (serverId, ))
         res = self.cur.fetchall()
         if len(res) > 0:
-            logging.debug("OS Instance for host {hostName} found.".format(hostName=hostName))
+            logging.debug("OS Instance for host {hostName} found.".format(hostName=serverId))
             return res[0]
         else:
-            logging.error("OS Instance for {hostName} not found.".format(hostName=hostName))
+            logging.error("OS Instance for {hostName} not found.".format(hostName=serverId))
             return False
 
     def get_table(self, tablename):

@@ -7,6 +7,7 @@ import logging
 import pandas
 from lib import localstore
 from lib import my_env
+from lib.murcs import *
 from lib import murcsrest
 
 ignore = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "clientId", "siteId", "version", "dataQuality",
@@ -56,11 +57,12 @@ for row in df.iterrows():
     esl = row[1].to_dict()
     # Only handle systems from VPC.
     if esl["DC Name"] in dc_names:
-        serverId = my_env.fmo_serverId(esl["System Name"])
+        serverId = fmo_serverId(esl["System Name"])
+        hostName = fmo_hostName(esl["System Name"])
         srv_in_esl.append(serverId)
         # Create dictionary with info from ESL
         serverprops = dict(
-            hostName=serverId,
+            hostName=hostName,
             serverId=serverId,
             site=dict(siteId=esl["DC Name"])
         )
@@ -87,6 +89,8 @@ for row in df.iterrows():
         initialize_os_id = "to be defined"
         os_id = initialize_os_id
         if murcs_rec:
+            # Convert sqlite row to dictionary
+            murcs_rec = dict(murcs_rec)
             # Remember softId for OS
             soft_rec = lcl.get_softInst_os(serverId)
             if soft_rec:
@@ -94,7 +98,7 @@ for row in df.iterrows():
             # Update existing server record to guarantee that all murcs fields are in serverprops.
             for k in murcs_rec:
                 if not ((k in ignore) or (k in m2e) or (k in m2e_fixed)):
-                    if pandas.notnull(murcs_rec[k]):
+                    if murcs_rec[k]:
                         serverprops[k] = murcs_rec[k]
             # Now find fields that are updated or changed - murcs_rec is what we know. Does serverprops add info?
             # Check for new fields in ESL not yet in Murcs
@@ -140,7 +144,7 @@ for row in df.iterrows():
 my_loop.end_loop()
 
 # Now find servers in MURCS that are not in ESL.
-query = "SELECT hostName, serverId FROM server WHERE serverId LIKE 'VPC.%'"
+query = "SELECT hostName, serverId FROM server WHERE serverId LIKE 'vpc.%'"
 res = lcl.get_query(query)
 for rec in res:
     if rec["serverId"] not in srv_in_esl:

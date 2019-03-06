@@ -13,6 +13,7 @@ import logging
 import pandas
 from lib import localstore
 from lib import my_env
+from lib.murcs import *
 from lib import murcsrest
 
 dc_names = ["EMEA-DE-Frankfurt-eshelter-B"]
@@ -51,7 +52,7 @@ swinst_in_esl = []
 query = """
 SELECT distinct server.hostName as hostName, server.serverId as serverId, softinst.softwareInstanceId as instId
 FROM softinst
-INNER JOIN server on server.id = softinst.serverId
+INNER JOIN server on server.serverId = softinst.serverId
 WHERE softinst.softwareInstanceId LIKE "{src}_%"
 """.format(src=src_name)
 
@@ -73,7 +74,9 @@ for row in df.iterrows():
         if pandas.notnull(category):
             if category in whitelist:
                 my_loop.info_loop()
-                serverId = my_env.fmo_serverId(xl["System Name"])
+                serverId = fmo_serverId(xl["System Name"])
+                legacy_serverId = 'VPC' + serverId[len('vpc'):]
+
                 lbl = "{cat}|{name}|{version}".format(cat=xl["Solution Category"],
                                                       name=xl["Solution Name"],
                                                       version=xl["Software/Firmware Version"])
@@ -84,14 +87,15 @@ for row in df.iterrows():
                 else:
                     # softId can have _ as part of the name, so instId construction is not optimal since _ cannot
                     # be used as a field delimiter.
-                    instId = "{src}_{softId}_{sys}".format(src=src_name, softId=softId, sys=serverId)
+                    instId = "{src}_{softId}_{sys}".format(src=src_name, softId=softId, sys=legacy_serverId)
                     swinst_in_esl.append(instId)
                     if instId not in swinst_in_murcs:
                         props = dict(
                             softInstId=instId,
-                            instType=xl["Solution Category"],
-                            patchLevel=xl["Software/Firmware Version"]
+                            instType=xl["Solution Category"]
                         )
+                        if pandas.notnull(xl["Software/Firmware Version"]):
+                            props["patchLevel"] = xl["Software/Firmware Version"]
                         if pandas.notnull(xl["Instance Name"]):
                             props["instanceSubType"] = xl["Instance Name"]
                         if pandas.notnull(xl["Instance Status"]):
@@ -107,5 +111,5 @@ for lbl in rem_instances:
     soft_server = lbl[len(src_name)+1:]
     ss_delim_pos = soft_server.find("_VPC.")
     softId = soft_server[:ss_delim_pos]
-    serverId = soft_server[ss_delim_pos+1:]
+    serverId = soft_server[ss_delim_pos+1:].lower()
     r.remove_softInst(serverId, softId, lbl)

@@ -25,6 +25,29 @@ solInst_prop2dict = dict(
 )
 
 
+def fmo_hostName(fqdn):
+    """
+    This method will return the FMO hostName.
+
+    :param fqdn: or servername.
+    :return: servername.lower()
+    """
+    fqdn_arr = fqdn.strip().lower().split(".")
+    return "{h}".format(h=fqdn_arr[0])
+
+
+def fmo_serverId(fqdn):
+    """
+    This method will return the FMO serverId. FMO serverId has 'vpc.' in front of servername.
+
+    :param fqdn: or servername.
+    :return: 'vpc.' + servername.lower()
+    """
+    hostName = fmo_hostName(fqdn)
+    serverId = "vpc.{h}".format(h=hostName)
+    return serverId
+
+
 def handle_properties(propdict):
     """
     This method handles the property information. In case of servers and solutions, properties are provided in a list of
