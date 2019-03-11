@@ -8,6 +8,7 @@ import argparse
 import logging
 import pandas
 from lib import localstore
+from lib.murcs import *
 from lib import my_env
 from lib import murcsrest
 
@@ -50,7 +51,7 @@ for row in df.iterrows():
     # Get excel row in dict format
     xl = row[1].to_dict()
     if pandas.notnull(xl["Server Name"]):
-        serverId = my_env.fmo_serverId(xl["Server Name"])
+        serverId = fmo_serverId(xl["Server Name"])
         srv_rec = lcl.get_server(serverId)
         if srv_rec:
             if pandas.notnull(xl["BYOIP"]):

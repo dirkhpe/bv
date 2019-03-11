@@ -8,6 +8,7 @@ import logging
 import pandas
 from lib import localstore
 from lib import my_env
+from lib.murcs import *
 from lib import murcsrest
 
 dc_names = ["EMEA-DE-Frankfurt-eshelter-B"]
@@ -34,7 +35,7 @@ query = """
 SELECT distinct server.serverId as serverId, sni.networkInterfaceId as netIfaceId
 FROM server
 INNER JOIN netiface sni on sni.serverId=server.serverId
-WHERE server.serverId LIKE "VPC.%"
+WHERE server.serverId LIKE "vpc.%"
 AND sni.networkInterfaceId like "{src}|%"
 """.format(src=src_name)
 
@@ -54,7 +55,7 @@ for row in df.iterrows():
         lbl = xl["IP Type"]
         if lbl in ip_labels:
             my_loop.info_loop()
-            serverId = my_env.fmo_serverId(xl["System Name"])
+            serverId = fmo_serverId(xl["System Name"])
             ipAddress = xl["IP Address"]
             ifaceId = "{src}|{lbl}|{ip}".format(src=src_name, lbl=lbl, ip=ipAddress)
             srvlbl = "{s}|{id}".format(s=serverId, id=ifaceId)

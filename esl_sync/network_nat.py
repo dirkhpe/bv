@@ -5,6 +5,7 @@ It will remove IP addresses from MURCS that are no longer in NAT.
 import logging
 import pandas
 from lib import localstore
+from lib.murcs import *
 from lib import my_env
 from lib import murcsrest
 
@@ -61,7 +62,7 @@ for row in df.iterrows():
     else:
         logging.error("CMO Hostname {s} not found in MURCS".format(s=srv_lbl))
     # Handle VPC NAT
-    srv_lbl = my_env.fmo_serverId(xl["TargetServer"])
+    srv_lbl = fmo_serverId(xl["TargetServer"])
     srv_rec = lcl.get_server(srv_lbl)
     if srv_rec:
         serverId = srv_rec["serverId"]
