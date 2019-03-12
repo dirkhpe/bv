@@ -4,7 +4,7 @@ This script consolidates the murcs specific functions.
 
 excludedprops = ["id", "changedAt", "changedBy", "createdAt", "createdBy", "clientId", "version", "dataQuality",
                  "ragState"]
-
+srv_excluded = excludedprops + ["operatingSystem", "operatingSystemVersion"]
 fixedprops = dict(
     murcsScope="Full"
 )

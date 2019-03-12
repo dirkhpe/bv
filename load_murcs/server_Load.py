@@ -25,7 +25,7 @@ for trow in records:
         serverId=serverId
     )
     for k in row:
-        if row[k] and k not in excludedprops:
+        if row[k] and k not in srv_excluded:
             if k in fixedprops:
                 payload[k] = fixedprops[k]
             elif k in srv_prop2dict:
