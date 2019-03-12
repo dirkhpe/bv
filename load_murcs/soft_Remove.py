@@ -1,29 +1,24 @@
 """
-This script will load a site file.
+This script will remove software information.
 """
 import logging
 from lib import localstore
 from lib import my_env
+from lib.murcs import *
 from lib import murcsrest
-
 
 cfg = my_env.init_env("bellavista", __file__)
 r = murcsrest.MurcsRest(cfg)
 lcl = localstore.sqliteUtils(cfg)
-tablename = "site"
+tablename = "software"
 logging.info("Handling table: {t}".format(t=tablename))
 
 records = lcl.get_table(tablename)
-my_loop = my_env.LoopInfo("Sites", 20)
+my_loop = my_env.LoopInfo("Software", 20)
 for trow in records:
-    row = dict(trow)
     my_loop.info_loop()
-    siteId = row.pop("siteId")
-    payload = dict(
-        siteId=siteId
-    )
-    for k in row:
-        if row[k]:
-            payload[k] = row[k]
-    r.add_site(siteId, payload)
+    # Get excel row in dict format
+    row = dict(trow)
+    softwareId = row.pop("softwareId")
+    r.remove_software(softwareId)
 my_loop.end_loop()

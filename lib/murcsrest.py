@@ -954,6 +954,25 @@ class MurcsRest:
             r.raise_for_status()
         return
 
+    def remove_software(self, softwareId):
+        """
+        This method will remove the software.
+
+        :param softwareId: ID of the software to be removed.
+        :return:
+        """
+        url = self.url_base + "software/{softwareId}".format(softwareId=softwareId)
+        headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
+        r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
+        if r.status_code == 200:
+            msg = "Software {softId} removed".format(softId=softId)
+            logging.info(msg)
+        else:
+            logging.fatal("Investigate: {s}".format(s=r.status_code))
+            logging.fatal(r.content)
+            r.raise_for_status()
+        return
+
     def remove_softInst(self, serverId, softId, softInstId):
         """
         This method will remove the softInstance ID. This is the first step to remove the link from server to

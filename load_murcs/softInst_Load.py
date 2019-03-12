@@ -1,44 +1,36 @@
 """
-This script will load a software Instance file.
+This script will load software Instance information.
 """
-import argparse
 import logging
-import pandas
+from lib import localstore
 from lib import my_env
 from lib.murcs import *
 from lib import murcsrest
 
-# Configure command line arguments
-parser = argparse.ArgumentParser(
-    description="Load a Server file into Murcs"
-)
-parser.add_argument('-f', '--filename', type=str, required=True,
-                    help='Please provide the software Instance file to load.')
-args = parser.parse_args()
 cfg = my_env.init_env("bellavista", __file__)
 r = murcsrest.MurcsRest(cfg)
-logging.info("Arguments: {a}".format(a=args))
+lcl = localstore.sqliteUtils(cfg)
+tablename = "softinst"
+logging.info("Handling table: {t}".format(t=tablename))
 
 excludedprops = excludedprops
 excludedprops.append("hostName")
 
-# Read the file
-df = pandas.read_excel(args.filename)
+records = lcl.get_table(tablename)
 my_loop = my_env.LoopInfo("Software Instance", 20)
-for row in df.iterrows():
+for trow in records:
     my_loop.info_loop()
-    # Get excel row in dict format
-    xl = row[1].to_dict()
-    softwareInstanceId = xl.pop("softwareInstanceId")
-    xl["serverId"] = xl["serverId"].lower()
+    row = dict(trow)
+    softwareInstanceId = row.pop("softwareInstanceId")
+    row["serverId"] = row["serverId"].lower()
     payload = dict(
         softwareInstanceId=softwareInstanceId
     )
-    for k in xl:
-        if pandas.notnull(xl[k]) and k not in excludedprops:
+    for k in row:
+        if pandas.notnull(row[k]) and k not in excludedprops:
             if k in softInst_prop2dict:
-                payload[softInst_prop2dict[k][0]] = {softInst_prop2dict[k][1]: xl[k]}
+                payload[softInst_prop2dict[k][0]] = {softInst_prop2dict[k][1]: row[k]}
             else:
-                payload[k] = xl[k]
+                payload[k] = row[k]
     r.add_softInst(softwareInstanceId, payload)
 my_loop.end_loop()
