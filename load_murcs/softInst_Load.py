@@ -13,7 +13,6 @@ lcl = localstore.sqliteUtils(cfg)
 tablename = "softinst"
 logging.info("Handling table: {t}".format(t=tablename))
 
-excludedprops = excludedprops
 excludedprops.append("hostName")
 
 records = lcl.get_table(tablename)
@@ -27,7 +26,7 @@ for trow in records:
         softwareInstanceId=softwareInstanceId
     )
     for k in row:
-        if pandas.notnull(row[k]) and k not in excludedprops:
+        if row[k] and k not in excludedprops:
             if k in softInst_prop2dict:
                 payload[softInst_prop2dict[k][0]] = {softInst_prop2dict[k][1]: row[k]}
             else:

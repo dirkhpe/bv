@@ -19,7 +19,6 @@ cfg = my_env.init_env("bellavista", __file__)
 r = murcsrest.MurcsRest(cfg)
 logging.info("Arguments: {a}".format(a=args))
 
-excludedprops = excludedprops
 excludedprops.append("hostName")
 
 # Read the file

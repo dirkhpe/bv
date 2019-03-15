@@ -29,6 +29,7 @@ r.get_data("software", reslist=res)
 for cnt in range(len(res)):
     # Todo: process State variable
     res[cnt]["status"] = None
+    print(res[cnt]["id"], res[cnt]["softwareId"])
 lcl.insert_rows("software", res)
 
 logging.info("Handling Servers")

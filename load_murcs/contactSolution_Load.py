@@ -1,32 +1,25 @@
 """
-This script will load a contact person per solution file.
+This script will load contact person per solution information.
 """
-import argparse
 import logging
-import pandas
+from lib import localstore
 from lib import my_env
 from lib import murcsrest
 
-# Configure command line arguments
-parser = argparse.ArgumentParser(
-    description="Load a Contact person per solution file into Murcs"
-)
-parser.add_argument('-f', '--filename', type=str, required=True,
-                    help='Please provide the contact person per solution file to load.')
-args = parser.parse_args()
 cfg = my_env.init_env("bellavista", __file__)
 r = murcsrest.MurcsRest(cfg)
-logging.info("Arguments: {a}".format(a=args))
+lcl = localstore.sqliteUtils(cfg)
+tablename = "contactsolution"
+logging.info("Handling table: {t}".format(t=tablename))
 
-# Read the file
-df = pandas.read_excel(args.filename, converters={'solId': str})
+records = lcl.get_table(tablename)
 my_loop = my_env.LoopInfo("Contact persons per solution", 20)
-for row in df.iterrows():
+for trow in records:
     my_loop.info_loop()
     # Get excel row in dict format
-    xl = row[1].to_dict()
-    email = xl.pop("email")
-    role = xl.pop("role")
-    solId = xl.pop("solId")
+    row = dict(trow)
+    email = row.pop("email")
+    role = row.pop("role")
+    solId = row.pop("solutionId")
     r.add_solution_contact(solId, email, role)
 my_loop.end_loop()

@@ -328,7 +328,7 @@ class Solution(Base):
     applicationDetailTreatment = Column(Text)
     applicationTreatment = Column(Text)
     architecture = Column(Text)
-    assessmentComplete = Column(Text)
+    assessmentComplete = Column(Integer)
     avgUserCount = Column(Text)
     classification = Column(Text)
     comment = Column(Text)
@@ -601,7 +601,10 @@ class sqliteUtils:
                 # cnt.info_loop()
                 logging.debug(line)
                 values = tuple(line[key] for key in line.keys())
-                self.dbConn.execute(query, values)
+                try:
+                    self.dbConn.execute(query, values)
+                except sqlite3.IntegrityError:
+                    logging.error("Integrity Error on query {q} with values {v}".format(q=query, v=values))
             # cnt.end_loop()
             self.dbConn.commit()
         return

@@ -1,40 +1,32 @@
 """
-This script will load a solutionInstanceComponent file.
+This script will load solutionInstanceComponent information.
 """
-import argparse
 import logging
-import pandas
+from lib import localstore
 from lib import my_env
 from lib import murcsrest
 
-# Configure command line arguments
-parser = argparse.ArgumentParser(
-    description="Load a Solution Instance Component file into Murcs"
-)
-parser.add_argument('-f', '--filename', type=str, required=True,
-                    help='Please provide the solution Instance Component file to load.')
-args = parser.parse_args()
 cfg = my_env.init_env("bellavista", __file__)
 r = murcsrest.MurcsRest(cfg)
-logging.info("Arguments: {a}".format(a=args))
+lcl = localstore.sqliteUtils(cfg)
+tablename = "solinstcomp"
+logging.info("Handling table: {t}".format(t=tablename))
 
-# Read the file
-df = pandas.read_excel(args.filename, converters={'solId': str})
+records = lcl.get_table(tablename)
 my_loop = my_env.LoopInfo("Solution Instance Components", 20)
-for row in df.iterrows():
+for trow in records:
     my_loop.info_loop()
-    # Get excel row in dict format
-    xl = row[1].to_dict()
-    solInstId = xl["solInstId"]
-    softInstId = xl["softInstId"]
-    solId = xl["solId"]
-    serverId = xl["serverId"].lower()
-    softId = xl["softId"]
-    validFrom = xl["validFrom"]
-    if pandas.isnull(validFrom):
-        mode = "CMO"
-    else:
+    row = dict(trow)
+    solInstId = row["solutionInstanceId"]
+    softInstId = row["softwareInstanceId"]
+    solId = row["solutionId"]
+    serverId = row["serverId"].lower()
+    softId = row["softwareId"]
+    validFrom = row["validFrom"]
+    if validFrom:
         mode = "FMO"
+    else:
+        mode = "CMO"
     r.add_solInstComp(solInstId=solInstId, softInstId=softInstId, solId=solId, serverId=serverId, softId=softId,
                       mode=mode)
 my_loop.end_loop()
