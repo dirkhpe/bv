@@ -20,7 +20,7 @@ RUN bvenv/bin/pip install --upgrade pip
 RUN bvenv/bin/pip install -r requirements.txt
 # RUN apk del .build-deps gcc musl-dev linux-headers alpine-sdk
 
-COPY properties properties
+# COPY properties properties
 COPY lib lib
 COPY load_murcs load_murcs
 # COPY fromflask.py config.py boot.sh .env .flaskenv ./
