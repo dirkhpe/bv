@@ -23,10 +23,12 @@ RUN bvenv/bin/pip install -r requirements.txt
 # COPY properties properties
 COPY lib lib
 COPY load_murcs load_murcs
+COPY rebuild_sqlite.py ./
 # COPY fromflask.py config.py boot.sh .env .flaskenv ./
 # RUN chmod +x boot.sh
 
 RUN chown -R dirk:dirk ./
+RUN chown -R dirk:dirk /logs
 USER dirk
 
 # EXPOSE 5000
