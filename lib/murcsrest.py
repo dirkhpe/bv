@@ -965,7 +965,7 @@ class MurcsRest:
         headers = {'Content-Type': 'application/json; charset=utf-8', 'Accept': 'application/json'}
         r = requests.delete(url, headers=headers, auth=(self.user, self.passwd))
         if r.status_code == 200:
-            msg = "Software {softId} removed".format(softId=softId)
+            msg = "Software {softId} removed".format(softId=softwareId)
             logging.info(msg)
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
