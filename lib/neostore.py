@@ -3,8 +3,9 @@ This class consolidates functions related to the neo4J datastore.
 """
 
 import logging
-from py2neo import Database, Graph, Node, Relationship, NodeMatcher, RelationshipMatch
+import os
 import uuid
+from py2neo import Database, Graph, Node, Relationship, NodeMatcher, RelationshipMatch
 
 
 class NeoStore:
@@ -33,8 +34,8 @@ class NeoStore:
         """
         logging.debug("Creating Neostore object.")
         neo4j_config = {
-            'user': self.config['Graph']['username'],
-            'password': self.config['Graph']['password'],
+            'user': os.getenv("NEO4J_USER"),
+            'password': os.getenv("NEO4J_PWD"),
         }
         # Check that Neo4J is running the expected Neo4J Store - to avoid accidents...
         connected_db = Database(**neo4j_config)

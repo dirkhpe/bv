@@ -26,11 +26,11 @@ class MurcsRest:
             os.environ.pop("https_proxy")
         except KeyError:
             pass
-        self.user = cfg['Murcs']['user']
-        self.passwd = cfg['Murcs']['passwd']
-        host = cfg['Murcs']['host']
-        port = cfg['Murcs']['port']
-        clientId = cfg['Murcs']['clientId']
+        self.user = os.getenv("MURCS_USER")
+        self.passwd = os.getenv("MURCS_PWD")
+        host = os.getenv("MURCS_HOST")
+        port = os.getenv("MURCS_PORT")
+        clientId = os.getenv("MURCS_CLIENTID")
         self.url_base = "http://{host}:{port}/murcs/rest/{clientId}/".format(host=host,
                                                                              port=port,
                                                                              clientId=clientId)

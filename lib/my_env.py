@@ -13,6 +13,8 @@ import sys
 import subprocess
 from collections import namedtuple
 from datetime import datetime
+from dotenv import load_dotenv
+
 
 def init_env(projectname, filename):
     """
@@ -55,7 +57,7 @@ def init_loghandler(config, modulename):
     :param modulename: The name of the module. Each module will create it's own logfile.
     :return: Log Handler
     """
-    logdir = config['Main']['logdir']
+    logdir = os.getenv("LOGDIR")
     loglevel = config['Main']['loglevel'].upper()
     computername = platform.node()
     # Define logfileName
@@ -117,34 +119,25 @@ def get_inifile(projectname):
     """
     Read Project configuration ini file in subdirectory properties. Config ini filename is the projectname.
     The ini file is located in the properties module, which is sibling of the lib module.
+    Environment settings defined in .env file are exported as well. The .env file needs to be in the project main
+    directory.
 
     :param projectname: Name of the project.
-
     :return: Object reference to the inifile.
     """
     # Use Project Name as ini file.
-    # TODO: review procedure to get directory name instead of relative properties/ path.
-    if getattr(sys, 'frozen', False):
-        # Running Frozen (pyinstaller executable)
-        configfile = projectname + ".ini"
-    else:
-        # Running Live
-        # properties directory is sibling of lib directory.
-        (filepath_lib, _) = os.path.split(__file__)
-        (filepath, _) = os.path.split(filepath_lib)
-        # configfile = filepath + "/properties/" + projectname + ".ini"
-        configfile = os.path.join(filepath, 'properties', "{p}.ini".format(p=projectname))
+    # Running Live
+    # properties directory is sibling of lib directory.
+    (filepath_lib, _) = os.path.split(__file__)
+    (filepath, _) = os.path.split(filepath_lib)
+    # configfile = filepath + "/properties/" + projectname + ".ini"
+    configfile = os.path.join(filepath, 'properties', "{p}.ini".format(p=projectname))
     ini_config = configparser.ConfigParser()
-    try:
-        f = open(configfile)
-        ini_config.read_file(f)
-        f.close()
-    except:
-        e = sys.exc_info()[1]
-        ec = sys.exc_info()[0]
-        log_msg = "Read Inifile not successful: %s (%s)"
-        print(log_msg % (e, ec))
-        sys.exit(1)
+    f = open(configfile)
+    ini_config.read_file(f)
+    f.close()
+    envfile = os.path.join(filepath, ".env")
+    load_dotenv(dotenv_path=envfilep)
     return ini_config
 
 

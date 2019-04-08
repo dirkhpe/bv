@@ -465,7 +465,7 @@ class sqliteUtils:
         """
         To drop a database in sqlite3, you need to delete the file.
         """
-        self.db = config['Main']['db']
+        self.db = os.path.join(os.getenv("DBDIR"), config['Main']['db'])
         self.dbConn, self.cur = self._connect2db()
 
     def _connect2db(self):
