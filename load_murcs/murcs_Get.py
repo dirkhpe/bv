@@ -14,7 +14,12 @@ cfg = my_env.init_env("bellavista", __file__)
 r = murcsrest.MurcsRest(cfg)
 lcl = localstore.sqliteUtils(cfg)
 
+logging.info("Get Version Information")
+res = r.get_version()
+lcl.insert_row("version", res)
+
 res = []
+logging.info("Get Site information")
 r.get_data("sites", reslist=res)
 lcl.insert_rows("site", res)
 
@@ -22,15 +27,6 @@ logging.info("Handling Person information")
 res = []
 r.get_data("persons", reslist=res)
 lcl.insert_rows("person", res)
-
-logging.info("Handling Software")
-res = []
-r.get_data("software", reslist=res)
-for cnt in range(len(res)):
-    # Todo: process State variable
-    res[cnt]["status"] = None
-    print(res[cnt]["id"], res[cnt]["softwareId"])
-lcl.insert_rows("software", res)
 
 logging.info("Handling Servers")
 res = []
@@ -69,7 +65,9 @@ for record in records:
     if len(softinstances) > 0:
         for cnt in range(len(softinstances)):
             softinstances[cnt]["serverId"] = handle_server(softinstances[cnt].pop("server"))
-            softinstances[cnt]["softwareId"] = handle_software(softinstances[cnt].pop("software"))
+            softinstances[cnt]["softwareId"], swdict = handle_software(softinstances[cnt].pop("software"))
+            if isinstance(swdict, dict):
+                lcl.insert_row("software", swdict)
         lcl.insert_rows("softinst", softinstances)
 
 logging.info("Collecting Solutions")

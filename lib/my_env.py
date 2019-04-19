@@ -137,7 +137,7 @@ def get_inifile(projectname):
     ini_config.read_file(f)
     f.close()
     envfile = os.path.join(filepath, ".env")
-    load_dotenv(dotenv_path=envfilep)
+    load_dotenv(dotenv_path=envfile)
     return ini_config
 
 
@@ -231,4 +231,4 @@ class LoopInfo:
     def end_loop(self):
         curr_time = datetime.now().strftime("%H:%M:%S")
         print("{0} - {1} {2} handled - End.\n".format(curr_time, str(self.rec_cnt), str(self.attribname)))
-        return
+        return self.rec_cnt

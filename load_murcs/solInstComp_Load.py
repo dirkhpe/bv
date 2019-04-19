@@ -29,4 +29,5 @@ for trow in records:
         mode = "CMO"
     r.add_solInstComp(solInstId=solInstId, softInstId=softInstId, solId=solId, serverId=serverId, softId=softId,
                       mode=mode)
-my_loop.end_loop()
+cnt = my_loop.end_loop()
+logging.info("End Application, {cnt} records processed.".format(cnt=cnt))

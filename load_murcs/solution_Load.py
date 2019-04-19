@@ -29,4 +29,5 @@ for trow in records:
             else:
                 payload[k] = row[k]
     r.add_sol(solutionId, payload)
-my_loop.end_loop()
+cnt = my_loop.end_loop()
+logging.info("End Application, {cnt} records processed.".format(cnt=cnt))

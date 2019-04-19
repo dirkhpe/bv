@@ -22,4 +22,5 @@ for trow in records:
     role = row.pop("role")
     serverId = row.pop("serverId").lower()
     r.add_server_contact(serverId, email, role)
-my_loop.end_loop()
+cnt = my_loop.end_loop()
+logging.info("End Application, {cnt} records processed.".format(cnt=cnt))

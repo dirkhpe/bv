@@ -28,4 +28,5 @@ for trow in records:
         if row[k] and k not in excludedprops:
             payload_if[k] = row[k]
     r.add_serverNetIface(serverId, interfaceId, payload_if)
-my_loop.end_loop()
+cnt = my_loop.end_loop()
+logging.info("End Application, {cnt} records processed.".format(cnt=cnt))

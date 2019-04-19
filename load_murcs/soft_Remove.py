@@ -21,4 +21,5 @@ for trow in records:
     row = dict(trow)
     softwareId = row.pop("softwareId")
     r.remove_software(softwareId)
-my_loop.end_loop()
+cnt = my_loop.end_loop()
+logging.info("End Application, {cnt} records processed.".format(cnt=cnt))

@@ -112,6 +112,7 @@ class Person(Base):
     company = Column(Text)
     department = Column(Text)
     email = Column(Text)
+    externalPersonId = Column(Text)
     firstName = Column(Text)
     lastName = Column(Text)
     mobilePhoneNo = Column(Text)
@@ -455,6 +456,18 @@ class SolutionToSolution(Base):
     toSolutionId = Column(Text)
 
 
+class Version(Base):
+    """
+    Table containing version information.
+    """
+    __tablename__ = "version"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    databaseVersion = Column(Text)
+    murcsBuild = Column(Text)
+    murcsNode = Column(Text)
+    murcsVersion = Column(Text)
+
+
 class sqliteUtils:
     """
     This class consolidates a number of Database utilities for sqlite, such as rebuild of the database or rebuild of a
@@ -605,6 +618,8 @@ class sqliteUtils:
                     self.dbConn.execute(query, values)
                 except sqlite3.IntegrityError:
                     logging.error("Integrity Error on query {q} with values {v}".format(q=query, v=values))
+                except sqlite3.InterfaceError:
+                    logging.error("Interface error on query {q} with values {v}".format(q=query, v=values))
             # cnt.end_loop()
             self.dbConn.commit()
         return

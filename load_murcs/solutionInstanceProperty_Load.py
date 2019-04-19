@@ -32,4 +32,5 @@ for trow in records:
             else:
                 payload[k] = row[k]
     r.add_solComp_property(solcomp_rec, payload)
-my_loop.end_loop()
+cnt = my_loop.end_loop()
+logging.info("End Application, {cnt} records processed.".format(cnt=cnt))

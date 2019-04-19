@@ -26,4 +26,5 @@ for trow in records:
         if row[k]:
             payload[k] = row[k]
     r.add_site(siteId, payload)
-my_loop.end_loop()
+cnt = my_loop.end_loop()
+logging.info("End Application, {cnt} records processed.".format(cnt=cnt))

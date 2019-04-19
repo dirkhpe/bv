@@ -30,5 +30,11 @@ for trow in records:
                 payload[srv_prop2dict[k][0]] = {srv_prop2dict[k][1]: row[k]}
             else:
                 payload[k] = row[k]
-    r.add_solution_property(solutionId, payload)
-my_loop.end_loop()
+    try:
+        _ = payload["propertyValue"]
+        r.add_solution_property(solutionId, payload)
+    except KeyError:
+        logging.error("Solution {sid} has no value for property {p}".format(sid=payload["solutionId"],
+                                                                            p=payload["propertyName"]))
+cnt = my_loop.end_loop()
+logging.info("End Application, {cnt} records processed.".format(cnt=cnt))

@@ -24,6 +24,8 @@ solInst_prop2dict = dict(
     solutionId=("solution", "solutionId")
 )
 
+disc_sw = []    # List of softwareIds that have been discovered.
+
 
 def fmo_hostName(fqdn):
     """
@@ -92,7 +94,13 @@ def handle_site(sitedict):
 
 def handle_software(swdict):
     if isinstance(swdict, dict):
-        return swdict["softwareId"]
+        softwareId = swdict["softwareId"]
+        if softwareId in disc_sw:
+            return softwareId, None
+        else:
+            disc_sw.append(softwareId)
+            swdict["status"] = None
+            return softwareId, swdict
     else:
         return None
 
@@ -139,7 +147,7 @@ def handle_solToSol(soltosoldict, solToSol_done):
 
 def handle_swinstid(swinstdict):
     softwareInstanceId = swinstdict["softwareInstanceId"]
-    softwareId = handle_software(swinstdict["software"])
+    softwareId = handle_software(swinstdict["software"])[0]
     serverId = handle_server(swinstdict["server"])
     return softwareInstanceId, softwareId, serverId
 
