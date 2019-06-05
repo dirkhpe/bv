@@ -9,7 +9,6 @@ import pymysql
 class Murcs:
     """
     This class will set up a direct connection to MySQL.
-    For Drupal lkb this seems a better idea than emulating the database in a SQLAlchemy way.
     """
 
     def __init__(self, cfg):

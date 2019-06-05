@@ -950,7 +950,7 @@ class MurcsRest:
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
-            r.raise_for_status()
+            # r.raise_for_status() - If removal not successful then probably record was gone before.
         return
 
     def remove_serverNetIfaceIp(self, serverId, ifaceId, ipAddress):
@@ -973,7 +973,7 @@ class MurcsRest:
         else:
             logging.fatal("Investigate: {s}".format(s=r.status_code))
             logging.fatal(r.content)
-            r.raise_for_status()
+            # r.raise_for_status() - If removal not successful then probably record was gone before.
         return
 
     def remove_software(self, softwareId):

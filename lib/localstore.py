@@ -497,6 +497,9 @@ class sqliteUtils:
         else:
             return False, False
 
+    def close(self):
+        self.dbConn.close()
+
     def create_table(self, tablename, row):
         """
         This method will create a table where the fields are the row list.
@@ -564,6 +567,28 @@ class sqliteUtils:
             return res[0]
         else:
             logging.error("OS Instance for {hostName} not found.".format(hostName=serverId))
+            return False
+
+    def get_solComp(self, solInstId):
+        """
+        This method will return the solComp record linked with the solInstId.
+
+        :param solInstId: solInstId for which record is required.
+        :return: solInstId, or False if not found.
+        """
+        query = """
+            SELECT s.solutionId as solId, s.solutionName as solName, i.environment as environment, i.id as id,
+                   i.solutionInstanceId as solInstId, i.solutionInstanceName as solInstName, 
+                   i.solutionInstanceType as solInstType
+            FROM solinst i
+            INNER JOIN solution s on s.solutionId=i.solutionId
+            WHERE i.solutionInstanceId=?
+        """
+        self.cur.execute(query, (solInstId, ))
+        res = self.cur.fetchall()
+        if len(res) > 0:
+            return res[0]
+        else:
             return False
 
     def get_table(self, tablename):
